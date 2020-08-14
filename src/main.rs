@@ -1,3 +1,7 @@
+mod schema;
+
+use schema::Schema;
+use std::error::Error;
 use std::path::PathBuf;
 use structopt::StructOpt;
 
@@ -26,9 +30,16 @@ struct Cli {
     front_matter: Option<String>,
 }
 
-fn main() {
+fn main() -> Result<(), Box<dyn Error>> {
     let args = Cli::from_args();
-    println!("{:?}", args);
+    let schema = Schema::from_url(&args.url)?;
+    match schema.query_type {
+        Some(query_type) => println!("query type: {}", query_type),
+        None => {}
+    }
+
+    println!("mutation type: {:?}", schema.mutation_type);
+    Ok(())
 }
 
 #[cfg(test)]
