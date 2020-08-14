@@ -66,12 +66,17 @@ pub struct Schema {
 impl Schema {
     pub fn from_url(url: &str) -> Result<Schema, Box<dyn Error>> {
         let client = Client::new();
-        let json = client
+        let text = client
             .post(url)
             .header("Content-Type", "application/graphql")
             .body(SCHEMA_QUERY)
             .send()?
-            .json::<Value>()?;
+            .text()?;
+        return Schema::from_str(&text);
+    }
+
+    pub fn from_str(text: &str) -> Result<Schema, Box<dyn Error>> {
+        let json: Value = serde_json::from_str(&text)?;
         match json {
             Value::Object(map) => match map.get("data") {
                 Some(data) => match data.get("__schema") {
