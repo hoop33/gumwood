@@ -142,6 +142,18 @@ impl Schema {
             }
         };
     }
+
+    pub fn get_query_name(&self) -> Option<String> {
+        self.query_type.as_ref().and_then(|typ| typ.name.clone())
+    }
+
+    pub fn get_mutation_name(&self) -> Option<String> {
+        self.mutation_type.as_ref().and_then(|typ| typ.name.clone())
+    }
+
+    pub fn get_subscription_name(&self) -> Option<String> {
+        self.subscription.as_ref().and_then(|typ| typ.name.clone())
+    }
 }
 
 const SCHEMA_QUERY: &str = r#"query IntrospectionQuery {
@@ -325,6 +337,51 @@ mod tests {
         }"#;
         let schema = Schema::from_str(&response)?;
         assert_eq!("Query", schema.query_type.unwrap().name.unwrap());
+        Ok(())
+    }
+
+    #[test]
+    fn test_should_return_some_query_name_when_present() -> Result<(), Box<dyn Error>> {
+        let response = r#"{
+            "data": {
+                "__schema": {
+                    "queryType": {
+                        "name": "Query"
+                    }
+                }
+            }
+        }"#;
+        let schema = Schema::from_str(&response)?;
+        assert!(schema.get_query_name().is_some());
+        assert_eq!("Query", schema.get_query_name().unwrap());
+        Ok(())
+    }
+
+    #[test]
+    fn test_should_return_none_query_name_when_absent() -> Result<(), Box<dyn Error>> {
+        let response = r#"{
+            "data": {
+                "__schema": {
+                }
+            }
+        }"#;
+        let schema = Schema::from_str(&response)?;
+        assert!(schema.get_query_name().is_none());
+        Ok(())
+    }
+
+    #[test]
+    fn test_should_return_none_query_name_when_name_absent() -> Result<(), Box<dyn Error>> {
+        let response = r#"{
+            "data": {
+                "__schema": {
+                    "queryType": {
+                    }
+                }
+            }
+        }"#;
+        let schema = Schema::from_str(&response)?;
+        assert!(schema.get_query_name().is_none());
         Ok(())
     }
 }

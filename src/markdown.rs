@@ -1,3 +1,5 @@
+use super::schema::Schema;
+use std::collections::HashMap;
 use std::error::Error;
 
 #[derive(Debug)]
@@ -8,6 +10,21 @@ pub struct Markdown {
 impl Markdown {
     pub fn with_front_matter(front_matter: Option<String>) -> Result<Markdown, Box<dyn Error>> {
         Ok(Markdown { front_matter })
+    }
+
+    pub fn generate_from_schema(&self, schema: &Schema) -> HashMap<String, String> {
+        let mut contents: HashMap<String, String> = HashMap::new();
+
+        let query_name = schema.get_query_name();
+        println!("{:?}", query_name);
+
+        let mutation_name = schema.get_mutation_name();
+        println!("{:?}", mutation_name);
+
+        let subscription_name = schema.get_subscription_name();
+        println!("{:?}", subscription_name);
+
+        contents
     }
 }
 
