@@ -1,5 +1,7 @@
+mod markdown;
 mod schema;
 
+use markdown::Markdown;
 use schema::Schema;
 use std::error::Error;
 use std::path::PathBuf;
@@ -33,12 +35,15 @@ struct Cli {
 fn main() -> Result<(), Box<dyn Error>> {
     let args = Cli::from_args();
     let schema = Schema::from_url(&args.url)?;
+    let markdown = Markdown::with_front_matter(args.front_matter)?;
+
     match schema.query_type {
         Some(query_type) => println!("query type: {}", query_type),
         None => {}
     }
 
     println!("mutation type: {:?}", schema.mutation_type);
+    println!("{:?}", markdown);
     Ok(())
 }
 
