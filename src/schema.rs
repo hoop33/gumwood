@@ -35,6 +35,12 @@ pub struct Type {
     name: Option<String>,
     kind: Option<String>,
     description: Option<String>,
+    fields: Option<Vec<Field>>,
+    inputs: Option<Vec<Input>>,
+    interfaces: Option<Vec<TypeRef>>,
+    enums: Option<Vec<Enum>>,
+    #[serde(alias = "possibleTypes")]
+    possible_types: Option<Vec<TypeRef>>,
 }
 
 impl fmt::Display for Type {
@@ -46,10 +52,53 @@ impl fmt::Display for Type {
     }
 }
 
+#[derive(Debug, Serialize, Deserialize)]
+pub struct Field {
+    name: Option<String>,
+    description: Option<String>,
+    args: Option<Vec<Input>>,
+    #[serde(alias = "type")]
+    field_type: Option<TypeRef>,
+    #[serde(alias = "isDeprecated")]
+    is_deprecated: Option<bool>,
+    #[serde(alias = "deprecationReason")]
+    deprecation_reason: Option<String>,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct Input {
+    name: Option<String>,
+    description: Option<String>,
+    #[serde(alias = "type")]
+    input_type: Option<TypeRef>,
+    #[serde(alias = "defaultValue")]
+    default_value: Option<String>,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct Enum {
+    name: Option<String>,
+    description: Option<String>,
+    #[serde(alias = "isDeprecated")]
+    is_deprecated: Option<bool>,
+    #[serde(alias = "deprecationReason")]
+    deprecation_reason: Option<String>,
+}
+
+#[derive(Debug, Deserialize, Serialize)]
+pub struct TypeRef {
+    name: Option<String>,
+    kind: Option<String>,
+    #[serde(alias = "ofType")]
+    of_type: Option<Box<TypeRef>>,
+}
+
 #[derive(Debug, Deserialize, Serialize)]
 pub struct Directive {
-    name: String,
-    description: String,
+    name: Option<String>,
+    description: Option<String>,
+    locations: Option<Vec<String>>,
+    args: Option<Vec<Input>>,
 }
 
 #[derive(Debug, Deserialize, Serialize)]
