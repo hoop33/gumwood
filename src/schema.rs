@@ -59,8 +59,8 @@ pub struct Schema {
     #[serde(alias = "mutationType")]
     pub mutation_type: Option<Type>,
     subscription: Option<Type>,
-    types: Vec<Type>,
-    directives: Vec<Directive>,
+    types: Option<Vec<Type>>,
+    directives: Option<Vec<Directive>>,
 }
 
 impl Schema {
@@ -194,3 +194,88 @@ fragment TypeRef on __Type {
     }
   }
 }"#;
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_should_pass_when_empty_schema() {
+        let response = r#"{
+            "data": {
+                "__schema": {
+                }
+            }
+        }"#;
+        match Schema::from_str(&response) {
+            Ok(_) => assert!(true),
+            Err(_) => assert!(false, "schema should parse"),
+        }
+    }
+
+    #[test]
+    fn test_should_fail_when_no_data() {
+        let response = r#"{
+        }"#;
+        match Schema::from_str(&response) {
+            Ok(_) => assert!(false, "schema should have data"),
+            Err(err) => assert_eq!("data not in response", err.to_string()),
+        }
+    }
+
+    #[test]
+    fn test_should_fail_when_no_schema() {
+        let response = r#"{
+            "data": {
+            }
+        }"#;
+        match Schema::from_str(&response) {
+            Ok(_) => assert!(false, "schema should have __schema"),
+            Err(err) => assert_eq!("schema not in response", err.to_string()),
+        }
+    }
+
+    #[test]
+    fn test_should_have_no_query_type_when_none() -> Result<(), Box<dyn Error>> {
+        let response = r#"{
+            "data": {
+                "__schema": {
+                }
+            }
+        }"#;
+        let schema = Schema::from_str(&response)?;
+        assert!(schema.query_type.is_none());
+        Ok(())
+    }
+
+    #[test]
+    fn test_should_have_query_type_when_some() -> Result<(), Box<dyn Error>> {
+        let response = r#"{
+            "data": {
+                "__schema": {
+                    "queryType": {
+                    }
+                }
+            }
+        }"#;
+        let schema = Schema::from_str(&response)?;
+        assert!(schema.query_type.is_some());
+        Ok(())
+    }
+
+    #[test]
+    fn test_should_have_query_type_name_when_present() -> Result<(), Box<dyn Error>> {
+        let response = r#"{
+            "data": {
+                "__schema": {
+                    "queryType": {
+                        "name": "Query"
+                    }
+                }
+            }
+        }"#;
+        let schema = Schema::from_str(&response)?;
+        assert_eq!("Query", schema.query_type.unwrap().name.unwrap());
+        Ok(())
+    }
+}
