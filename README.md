@@ -31,5 +31,3 @@ $ gumwood https://example.com/graphql --out-dir /path/to/output --multiple --fro
 Copyright &copy; 2020 Rob Warner
 
 Licensed under the [MIT License](https://hoop33.mit-license.org/)
-
-
