@@ -32,15 +32,15 @@ impl Error for SchemaError {
 
 #[derive(Debug, Deserialize, Serialize)]
 pub struct Type {
-    name: Option<String>,
-    kind: Option<String>,
-    description: Option<String>,
-    fields: Option<Vec<Field>>,
-    inputs: Option<Vec<Input>>,
-    interfaces: Option<Vec<TypeRef>>,
-    enums: Option<Vec<Enum>>,
+    pub name: Option<String>,
+    pub kind: Option<String>,
+    pub description: Option<String>,
+    pub fields: Option<Vec<Field>>,
+    pub inputs: Option<Vec<Input>>,
+    pub interfaces: Option<Vec<TypeRef>>,
+    pub enums: Option<Vec<Enum>>,
     #[serde(alias = "possibleTypes")]
-    possible_types: Option<Vec<TypeRef>>,
+    pub possible_types: Option<Vec<TypeRef>>,
 }
 
 impl fmt::Display for Type {
@@ -54,15 +54,15 @@ impl fmt::Display for Type {
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Field {
-    name: Option<String>,
-    description: Option<String>,
-    args: Option<Vec<Input>>,
+    pub name: Option<String>,
+    pub description: Option<String>,
+    pub args: Option<Vec<Input>>,
     #[serde(alias = "type")]
-    field_type: Option<TypeRef>,
+    pub field_type: Option<TypeRef>,
     #[serde(alias = "isDeprecated")]
-    is_deprecated: Option<bool>,
+    pub is_deprecated: Option<bool>,
     #[serde(alias = "deprecationReason")]
-    deprecation_reason: Option<String>,
+    pub deprecation_reason: Option<String>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -117,10 +117,11 @@ impl Schema {
         let client = Client::new();
         let text = client
             .post(url)
-            .header("Content-Type", "application/graphql")
-            .body(SCHEMA_QUERY)
+            .header("Content-Type", "application/json")
+            .body(format!("{{\"query\": \"{}\"}}", SCHEMA_QUERY).replace("\n", ""))
             .send()?
             .text()?;
+        println!("{}", text);
         return Schema::from_str(&text);
     }
 
@@ -153,6 +154,25 @@ impl Schema {
 
     pub fn get_subscription_name(&self) -> Option<String> {
         self.subscription.as_ref().and_then(|typ| typ.name.clone())
+    }
+
+    pub fn get_type(&self, name: &str) -> Option<&Type> {
+        match &self.types {
+            Some(types) => {
+                for typ in types.iter() {
+                    match &typ.name {
+                        Some(n) => {
+                            if n == name {
+                                return Some(&typ);
+                            }
+                        }
+                        None => {}
+                    }
+                }
+                return None;
+            }
+            None => None,
+        }
     }
 }
 
