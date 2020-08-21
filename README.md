@@ -15,7 +15,7 @@ You specify a live GraphQL endpoint and whether you want the resulting markdown 
 Get help:
 
 ```sh
-$ gumwood help
+$ gumwood --help
 gumwood 0.1.0
 Convert a GraphQL schema to Markdown
 
