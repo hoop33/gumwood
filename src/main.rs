@@ -4,6 +4,8 @@ mod schema;
 use markdown::Markdown;
 use schema::Schema;
 use std::error::Error;
+use std::fs::File;
+use std::io::Write;
 use std::path::PathBuf;
 use structopt::StructOpt;
 
@@ -12,6 +14,13 @@ use structopt::StructOpt;
 struct Cli {
     #[structopt()]
     url: String,
+
+    #[structopt(
+        short,
+        long,
+        help("Header to send in name:value format; allows multiple")
+    )]
+    header: Vec<String>,
 
     #[structopt(
         short,
@@ -34,10 +43,14 @@ struct Cli {
 
 fn main() -> Result<(), Box<dyn Error>> {
     let args = Cli::from_args();
-    let schema = Schema::from_url(&args.url)?;
+    let schema = Schema::from_url(&args.url, &args.header)?;
     let markdown = Markdown::with_front_matter(args.front_matter)?;
     let contents = markdown.generate_from_schema(&schema);
-    println!("{:?}", contents);
+    for (name, markdown) in contents {
+        let out_file = format!("{}.md", name);
+        let mut file = File::create(&args.out_dir.join(out_file))?;
+        file.write_all(markdown.as_bytes())?;
+    }
 
     Ok(())
 }
@@ -51,6 +64,10 @@ mod tests {
         let vec = vec![
             "gumroad",
             "https://example.com",
+            "--header",
+            "name1:value1",
+            "--header",
+            "name2:value2",
             "--out-dir",
             "./out",
             "--multiple",
@@ -59,6 +76,9 @@ mod tests {
         ];
         let args = Cli::from_iter(vec.iter());
         assert_eq!(args.url, "https://example.com");
+        assert_eq!(args.header.len(), 2);
+        assert_eq!(args.header[0], "name1:value1");
+        assert_eq!(args.header[1], "name2:value2");
         assert_eq!(args.out_dir.as_path().display().to_string(), "./out");
         assert_eq!(args.front_matter.unwrap(), "a:b;c:d");
         assert!(args.multiple);

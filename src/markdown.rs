@@ -15,15 +15,34 @@ impl Markdown {
     pub fn generate_from_schema(&self, schema: &Schema) -> HashMap<String, String> {
         let mut contents: HashMap<String, String> = HashMap::new();
 
-        let query_name = schema.get_query_name().expect("no query name found");
-        let query_type = schema.get_type(&query_name).expect("no query found");
-        contents.insert("queries".to_string(), type_to_markdown(&query_type));
+        match schema.get_query_name() {
+            Some(query_name) => {
+                let query_type = schema.get_type(&query_name).expect("no query found");
+                contents.insert("queries".to_string(), type_to_markdown(&query_type));
+            }
+            None => {}
+        }
 
-        //let mutation_name = schema.get_mutation_name();
-        //println!("{:?}", mutation_name);
+        match schema.get_mutation_name() {
+            Some(mutation_name) => {
+                let mutation_type = schema.get_type(&mutation_name).expect("no mutation found");
+                contents.insert("mutations".to_string(), type_to_markdown(&mutation_type));
+            }
+            None => {}
+        }
 
-        //let subscription_name = schema.get_subscription_name();
-        //println!("{:?}", subscription_name);
+        match schema.get_subscription_name() {
+            Some(subscription_name) => {
+                let subscription_type = schema
+                    .get_type(&subscription_name)
+                    .expect("no subscription found");
+                contents.insert(
+                    "subscriptions".to_string(),
+                    type_to_markdown(&subscription_type),
+                );
+            }
+            None => {}
+        }
 
         contents
     }
@@ -43,7 +62,7 @@ fn to_description(text: &str) -> String {
 }
 
 fn to_label(label: &str, value: &str) -> String {
-    format!("**{}:** {}\n", label, value)
+    format!("**{}:** {}\n\n", label, value)
 }
 
 fn to_notice(notice: &str) -> String {
@@ -107,22 +126,25 @@ fn field_to_markdown(field: &Field) -> String {
 
     match &field.args {
         Some(args) => {
-            s.push_str(&to_header(3, "Arguments"));
-            s.push_str("| Name | Description |\n| ---- | ----------- |\n");
-            for arg in args {
-                let name = match &arg.name {
-                    Some(name) => name,
-                    None => "(unknown)",
-                };
-                let description = match &arg.description {
-                    Some(description) => description,
-                    None => "",
-                };
-                s.push_str("| ");
-                s.push_str(&name);
-                s.push_str(" | ");
-                s.push_str(&description);
-                s.push_str(" |\n");
+            if args.len() > 0 {
+                s.push_str(&to_header(3, "Arguments"));
+                s.push_str("| Name | Description |\n| ---- | ----------- |\n");
+                for arg in args {
+                    let name = match &arg.name {
+                        Some(name) => name.trim(),
+                        None => "(unknown)",
+                    };
+                    let description = match &arg.description {
+                        Some(description) => description.trim().replace("\n", ""),
+                        None => "".to_string(),
+                    };
+                    s.push_str("| ");
+                    s.push_str(&name);
+                    s.push_str(" | ");
+                    s.push_str(&description);
+                    s.push_str(" |\n");
+                }
+                s.push_str("\n");
             }
         }
         None => {}

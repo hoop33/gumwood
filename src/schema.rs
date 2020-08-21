@@ -113,10 +113,16 @@ pub struct Schema {
 }
 
 impl Schema {
-    pub fn from_url(url: &str) -> Result<Schema, Box<dyn Error>> {
+    pub fn from_url(url: &str, headers: &Vec<String>) -> Result<Schema, Box<dyn Error>> {
         let client = Client::new();
-        let text = client
-            .post(url)
+        let mut post = client.post(url);
+        for header in headers {
+            let split: Vec<&str> = header.split(":").collect();
+            if split.len() == 2 {
+                post = post.header(split[0], split[1]);
+            }
+        }
+        let text = post
             .header("Content-Type", "application/json")
             .body(format!("{{\"query\": \"{}\"}}", SCHEMA_QUERY).replace("\n", ""))
             .send()?
