@@ -51,37 +51,39 @@ $ gumwood https://example.com/graphql --out-dir /path/to/output --multiple
 Convert a GraphQL schema to multiple markdown files, divided by type, with front matter:
 
 ```sh
-$ gumwood https://example.com/graphql --out-dir /path/to/output --multiple --front-matter "key1:value1;key2:value2"
+$ gumwood https://example.com/graphql --out-dir /path/to/output --multiple \
+--front-matter "key1:value1;key2:value2"
 ```
 
 Convert a GraphQL schema to multiple markdown files, divided by type, when the GraphQL endpoint requires authorization and a user agent:
 
 ```sh
-$ gumwood https://example.com/graphql --out-dir /path/to/output --multiple --header "Authorization: bearer myreallylongtoken" --header "User-Agent: gumwood"
+$ gumwood https://example.com/graphql --out-dir /path/to/output --multiple \
+--header "Authorization: bearer myreallylongtoken" --header "User-Agent: gumwood"
 ```
 
 ## Road Map
 
-[x] Schema load and parse from URL
-[x] Custom headers in URL request
-[ ] Write to single or multiple files (-m flag)
-[ ] Automatic versioning with semver
-[ ] Automatic releases using GitHub Actions
-[ ] Add front matter to generated file(s)
-[ ] Allow variables in front matter
-[ ] Better error messaging &mdash; maybe a debug mode?
-[ ] Objects
-[ ] Inputs
-[ ] Interfaces
-[ ] Enums
-[ ] Unions
-[ ] Scalars
-[ ] Add links (e.g. from types listed in queries to their actual types)
-[ ] More/better information on Queries markdown
-[ ] More/better information on Mutations markdown
-[ ] More/better information on Subscriptions markdown
-[ ] Optional templates for markdown format
-[ ] More automated testing
+- [x] Schema load and parse from URL
+- [x] Custom headers in URL request
+- [ ] Write to single or multiple files (-m flag)
+- [ ] Automatic versioning with semver
+- [ ] Automatic releases using GitHub Actions
+- [ ] Add front matter to generated file(s)
+- [ ] Allow variables in front matter
+- [ ] Better error messaging &mdash; maybe a debug mode?
+- [ ] Objects
+- [ ] Inputs
+- [ ] Interfaces
+- [ ] Enums
+- [ ] Unions
+- [ ] Scalars
+- [ ] Add links (e.g. from types listed in queries to their actual types)
+- [ ] More/better information on Queries markdown
+- [ ] More/better information on Mutations markdown
+- [ ] More/better information on Subscriptions markdown
+- [ ] Optional templates for markdown format
+- [ ] More automated testing
 
 ## Contributing
 
