@@ -67,12 +67,12 @@ pub struct Field {
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Input {
-    name: Option<String>,
-    description: Option<String>,
+    pub name: Option<String>,
+    pub description: Option<String>,
     #[serde(alias = "type")]
-    input_type: Option<TypeRef>,
+    pub input_type: Option<TypeRef>,
     #[serde(alias = "defaultValue")]
-    default_value: Option<String>,
+    pub default_value: Option<String>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -87,10 +87,10 @@ pub struct Enum {
 
 #[derive(Debug, Deserialize, Serialize)]
 pub struct TypeRef {
-    name: Option<String>,
-    kind: Option<String>,
+    pub name: Option<String>,
+    pub kind: Option<String>,
     #[serde(alias = "ofType")]
-    of_type: Option<Box<TypeRef>>,
+    pub of_type: Option<Box<TypeRef>>,
 }
 
 #[derive(Debug, Deserialize, Serialize)]
@@ -121,7 +121,6 @@ impl Schema {
             .body(format!("{{\"query\": \"{}\"}}", SCHEMA_QUERY).replace("\n", ""))
             .send()?
             .text()?;
-        println!("{}", text);
         return Schema::from_str(&text);
     }
 
