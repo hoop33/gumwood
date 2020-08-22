@@ -171,4 +171,17 @@ mod tests {
     fn test_to_description_should_create_description() {
         assert_eq!("> My description\n\n", to_description("My description"));
     }
+
+    #[test]
+    fn test_to_label_should_create_label() {
+        assert_eq!(
+            "**My Label:** My value\n\n",
+            to_label("My Label", "My value")
+        );
+    }
+
+    #[test]
+    fn test_to_notice_should_create_notice() {
+        assert_eq!("_My notice_\n", to_notice("My notice"));
+    }
 }
