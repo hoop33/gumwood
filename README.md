@@ -165,7 +165,7 @@ Gumwood uses the following open source libraries &mdash; thank you!
 * [serde-json](https://crates.io/crates/serde_json)
 * [structopt](https://crates.io/crates/structopt)
 
-Apologies if I've inadvertently any library.
+Apologies if I've inadvertently omitted any library.
 
 ## License
 
