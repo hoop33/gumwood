@@ -24,11 +24,7 @@ impl fmt::Display for SchemaError {
     }
 }
 
-impl Error for SchemaError {
-    fn description(&self) -> &str {
-        &self.message
-    }
-}
+impl Error for SchemaError {}
 
 #[derive(Debug, Deserialize, Serialize)]
 pub struct Type {
@@ -41,15 +37,6 @@ pub struct Type {
     pub enums: Option<Vec<Enum>>,
     #[serde(alias = "possibleTypes")]
     pub possible_types: Option<Vec<TypeRef>>,
-}
-
-impl fmt::Display for Type {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        match &self.name {
-            Some(name) => write!(f, "{}", name),
-            None => write!(f, ""),
-        }
-    }
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -107,7 +94,8 @@ pub struct Schema {
     pub query_type: Option<Type>,
     #[serde(alias = "mutationType")]
     pub mutation_type: Option<Type>,
-    pub subscription: Option<Type>,
+    #[serde(alias = "subscriptionType")]
+    pub subscription_type: Option<Type>,
     pub types: Option<Vec<Type>>,
     pub directives: Option<Vec<Directive>>,
 }
@@ -127,12 +115,12 @@ impl Schema {
             .body(format!("{{\"query\": \"{}\"}}", SCHEMA_QUERY).replace("\n", ""))
             .send()?
             .text()?;
-        return Schema::from_str(&text);
+
+        Schema::from_str(&text)
     }
 
     pub fn from_str(text: &str) -> Result<Schema, Box<dyn Error>> {
-        let json: Value = serde_json::from_str(&text)?;
-        match json {
+        match serde_json::from_str(&text)? {
             Value::Object(map) => match map.get("data") {
                 Some(data) => match data.get("__schema") {
                     Some(schema) => {
@@ -144,6 +132,10 @@ impl Schema {
                 None => return Err(Box::new(SchemaError::new("data not in response"))),
             },
             _ => {
+                // I don't think this is reachable; as far as I can tell,
+                // serde_json::from_str() fails if text is not a JSON object.
+                // You can't pass it an array, for example. So if line 14 passes,
+                // we're already guaranteed to have an object.
                 return Err(Box::new(SchemaError::new("response format not an object")));
             }
         };
@@ -158,7 +150,9 @@ impl Schema {
     }
 
     pub fn get_subscription_name(&self) -> Option<String> {
-        self.subscription.as_ref().and_then(|typ| typ.name.clone())
+        self.subscription_type
+            .as_ref()
+            .and_then(|typ| typ.name.clone())
     }
 
     pub fn get_type(&self, name: &str) -> Option<&Type> {
@@ -294,8 +288,17 @@ mod tests {
             }
         }"#;
         match Schema::from_str(&response) {
-            Ok(_) => assert!(true),
             Err(_) => assert!(false, "schema should parse"),
+            Ok(_) => assert!(true),
+        }
+    }
+
+    #[test]
+    fn test_should_fail_when_not_json() {
+        let response = "test";
+        match Schema::from_str(response) {
+            Ok(_) => assert!(false, "plain text should fail"),
+            Err(err) => assert_eq!("expected ident at line 1 column 2", err.to_string()),
         }
     }
 
@@ -407,6 +410,254 @@ mod tests {
         }"#;
         let schema = Schema::from_str(&response)?;
         assert!(schema.get_query_name().is_none());
+        Ok(())
+    }
+
+    #[test]
+    fn test_should_have_no_mutation_type_when_none() -> Result<(), Box<dyn Error>> {
+        let response = r#"{
+            "data": {
+                "__schema": {
+                }
+            }
+        }"#;
+        let schema = Schema::from_str(&response)?;
+        assert!(schema.mutation_type.is_none());
+        Ok(())
+    }
+
+    #[test]
+    fn test_should_have_mutation_type_when_some() -> Result<(), Box<dyn Error>> {
+        let response = r#"{
+            "data": {
+                "__schema": {
+                    "mutationType": {
+                    }
+                }
+            }
+        }"#;
+        let schema = Schema::from_str(&response)?;
+        assert!(schema.mutation_type.is_some());
+        Ok(())
+    }
+
+    #[test]
+    fn test_should_have_mutation_type_name_when_present() -> Result<(), Box<dyn Error>> {
+        let response = r#"{
+            "data": {
+                "__schema": {
+                    "mutationType": {
+                        "name": "mutation"
+                    }
+                }
+            }
+        }"#;
+        let schema = Schema::from_str(&response)?;
+        assert_eq!("mutation", schema.mutation_type.unwrap().name.unwrap());
+        Ok(())
+    }
+
+    #[test]
+    fn test_should_return_some_mutation_name_when_present() -> Result<(), Box<dyn Error>> {
+        let response = r#"{
+            "data": {
+                "__schema": {
+                    "mutationType": {
+                        "name": "mutation"
+                    }
+                }
+            }
+        }"#;
+        let schema = Schema::from_str(&response)?;
+        assert!(schema.get_mutation_name().is_some());
+        assert_eq!("mutation", schema.get_mutation_name().unwrap());
+        Ok(())
+    }
+
+    #[test]
+    fn test_should_return_none_mutation_name_when_absent() -> Result<(), Box<dyn Error>> {
+        let response = r#"{
+            "data": {
+                "__schema": {
+                }
+            }
+        }"#;
+        let schema = Schema::from_str(&response)?;
+        assert!(schema.get_mutation_name().is_none());
+        Ok(())
+    }
+
+    #[test]
+    fn test_should_return_none_mutation_name_when_name_absent() -> Result<(), Box<dyn Error>> {
+        let response = r#"{
+            "data": {
+                "__schema": {
+                    "mutationType": {
+                    }
+                }
+            }
+        }"#;
+        let schema = Schema::from_str(&response)?;
+        assert!(schema.get_mutation_name().is_none());
+        Ok(())
+    }
+
+    #[test]
+    fn test_should_have_no_subscription_type_when_none() -> Result<(), Box<dyn Error>> {
+        let response = r#"{
+            "data": {
+                "__schema": {
+                }
+            }
+        }"#;
+        let schema = Schema::from_str(&response)?;
+        assert!(schema.subscription_type.is_none());
+        Ok(())
+    }
+
+    #[test]
+    fn test_should_have_subscription_type_when_some() -> Result<(), Box<dyn Error>> {
+        let response = r#"{
+            "data": {
+                "__schema": {
+                    "subscriptionType": {
+                    }
+                }
+            }
+        }"#;
+        let schema = Schema::from_str(&response)?;
+        assert!(schema.subscription_type.is_some());
+        Ok(())
+    }
+
+    #[test]
+    fn test_should_have_subscription_type_name_when_present() -> Result<(), Box<dyn Error>> {
+        let response = r#"{
+            "data": {
+                "__schema": {
+                    "subscriptionType": {
+                        "name": "subscription"
+                    }
+                }
+            }
+        }"#;
+        let schema = Schema::from_str(&response)?;
+        assert_eq!(
+            "subscription",
+            schema.subscription_type.unwrap().name.unwrap()
+        );
+        Ok(())
+    }
+
+    #[test]
+    fn test_should_return_some_subscription_name_when_present() -> Result<(), Box<dyn Error>> {
+        let response = r#"{
+            "data": {
+                "__schema": {
+                    "subscriptionType": {
+                        "name": "subscription"
+                    }
+                }
+            }
+        }"#;
+        let schema = Schema::from_str(&response)?;
+        assert!(schema.get_subscription_name().is_some());
+        assert_eq!("subscription", schema.get_subscription_name().unwrap());
+        Ok(())
+    }
+
+    #[test]
+    fn test_should_return_none_subscription_name_when_absent() -> Result<(), Box<dyn Error>> {
+        let response = r#"{
+            "data": {
+                "__schema": {
+                }
+            }
+        }"#;
+        let schema = Schema::from_str(&response)?;
+        assert!(schema.get_subscription_name().is_none());
+        Ok(())
+    }
+
+    #[test]
+    fn test_should_return_none_subscription_name_when_name_absent() -> Result<(), Box<dyn Error>> {
+        let response = r#"{
+            "data": {
+                "__schema": {
+                    "subscriptionType": {
+                    }
+                }
+            }
+        }"#;
+        let schema = Schema::from_str(&response)?;
+        assert!(schema.get_subscription_name().is_none());
+        Ok(())
+    }
+
+    #[test]
+    fn test_should_return_none_when_no_types() -> Result<(), Box<dyn Error>> {
+        let response = r#"{
+        "data": {
+            "__schema": {
+            }
+        }
+    }"#;
+        let schema = Schema::from_str(&response)?;
+        assert!(schema.get_type("hello").is_none());
+        Ok(())
+    }
+
+    #[test]
+    fn test_should_return_none_when_type_has_no_name() -> Result<(), Box<dyn Error>> {
+        let response = r#"{
+        "data": {
+            "__schema": {
+                "types": [
+                    {
+                        "kind": "SCALAR"
+                    }
+                ]
+            }
+        }
+    }"#;
+        let schema = Schema::from_str(&response)?;
+        assert!(schema.get_type("hello").is_none());
+        Ok(())
+    }
+
+    #[test]
+    fn test_should_return_none_when_no_type_of_name() -> Result<(), Box<dyn Error>> {
+        let response = r#"{
+        "data": {
+            "__schema": {
+                "types": [
+                    {
+                        "name": "you're not my"
+                    }
+                ]
+            }
+        }
+    }"#;
+        let schema = Schema::from_str(&response)?;
+        assert!(schema.get_type("hello").is_none());
+        Ok(())
+    }
+
+    #[test]
+    fn test_should_return_some_when_type_of_name() -> Result<(), Box<dyn Error>> {
+        let response = r#"{
+        "data": {
+            "__schema": {
+                "types": [
+                    {
+                        "name": "you're not my"
+                    }
+                ]
+            }
+        }
+    }"#;
+        let schema = Schema::from_str(&response)?;
+        assert!(schema.get_type("you're not my").is_some());
         Ok(())
     }
 }

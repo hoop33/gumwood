@@ -84,6 +84,7 @@ $ gumwood https://example.com/graphql --out-dir /path/to/output --multiple \
 - [ ] More/better information on Subscriptions markdown
 - [ ] Optional templates for markdown format
 - [ ] More automated testing
+- [ ] Code coverage and banner as part of CI/CD
 
 ## Contributing
 
@@ -94,6 +95,23 @@ Pull requests and constructive criticism welcome!
 ```sh
 $ git clone https://github.com/hoop33/gumwood.git && cd gumwood
 $ cargo build
+```
+
+### Getting Test Code Coverage
+
+Gumwood uses [Tarpaulin](https://github.com/xd009642/tarpaulin) for test code coverage. Per the documentation, Tarpaulin supports only Linux on x86_64.
+
+To use:
+
+```sh
+$ make deps # required once only
+$ make coverage
+```
+
+To get an HTML report:
+
+```sh
+$ make html_coverage
 ```
 
 ### Architecture

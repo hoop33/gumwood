@@ -14,7 +14,6 @@ impl Markdown {
 
     pub fn generate_from_schema(&self, schema: &Schema) -> HashMap<String, String> {
         let mut contents: HashMap<String, String> = HashMap::new();
-        //let mut ignored_types = Vec::new();
 
         contents.insert("queries".to_string(), queries_to_markdown(schema));
         contents.insert("mutations".to_string(), mutations_to_markdown(schema));
