@@ -107,9 +107,9 @@ pub struct Schema {
     pub query_type: Option<Type>,
     #[serde(alias = "mutationType")]
     pub mutation_type: Option<Type>,
-    subscription: Option<Type>,
-    types: Option<Vec<Type>>,
-    directives: Option<Vec<Directive>>,
+    pub subscription: Option<Type>,
+    pub types: Option<Vec<Type>>,
+    pub directives: Option<Vec<Directive>>,
 }
 
 impl Schema {
