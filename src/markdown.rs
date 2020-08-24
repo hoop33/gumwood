@@ -285,6 +285,35 @@ mod tests {
     use super::*;
 
     #[test]
+    fn test_with_front_matter_should_return_ok_when_none() {
+        assert!(Markdown::with_front_matter(None).is_ok());
+    }
+
+    #[test]
+    fn test_with_front_matter_should_return_ok_when_some() {
+        assert!(Markdown::with_front_matter(Some("fm:foo".to_string())).is_ok());
+    }
+
+    #[test]
+    fn test_generate_from_schema_should_return_empty_when_empty_schema() {
+        let markdown = Markdown::with_front_matter(None).unwrap();
+        let schema = &Schema {
+            query_type: None,
+            mutation_type: None,
+            subscription_type: None,
+            types: None,
+            directives: None,
+        };
+        let map = markdown.generate_from_schema(schema);
+        assert_eq!(3, map.len());
+        assert_eq!("".to_string(), map["queries"]);
+        assert_eq!("".to_string(), map["mutations"]);
+        assert_eq!("".to_string(), map["subscriptions"]);
+    }
+
+    // Generic Markdown tests
+
+    #[test]
     fn test_to_header_should_create_header_1() {
         assert_eq!("# My Header\n\n", to_header(1, "My Header"));
     }
