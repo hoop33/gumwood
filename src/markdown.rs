@@ -311,6 +311,79 @@ mod tests {
         assert_eq!("".to_string(), map["subscriptions"]);
     }
 
+    #[test]
+    fn test_queries_to_markdown_should_return_empty_when_none() {
+        let schema = &Schema {
+            query_type: None,
+            mutation_type: None,
+            subscription_type: None,
+            types: None,
+            directives: None,
+        };
+        assert_eq!("".to_string(), queries_to_markdown(schema));
+    }
+
+    #[test]
+    fn test_queries_to_markdown_should_return_empty_when_some_and_no_members() {
+        let schema = &Schema {
+            query_type: Some(Type {
+                name: None,
+                kind: None,
+                description: None,
+                fields: None,
+                inputs: None,
+                interfaces: None,
+                enums: None,
+                possible_types: None,
+            }),
+            mutation_type: None,
+            subscription_type: None,
+            types: None,
+            directives: None,
+        };
+        assert_eq!("".to_string(), queries_to_markdown(schema));
+    }
+
+    #[test]
+    fn test_queries_to_markdown_should_return_markdown_when_some() {
+        let schema = &Schema {
+            query_type: Some(Type {
+                name: Some("Query".to_string()),
+                kind: None,
+                description: None,
+                fields: None,
+                inputs: None,
+                interfaces: None,
+                enums: None,
+                possible_types: None,
+            }),
+            mutation_type: None,
+            subscription_type: None,
+            types: Some(vec![Type {
+                name: Some("Query".to_string()),
+                kind: None,
+                description: Some("The root query".to_string()),
+                fields: Some(vec![Field {
+                    name: Some("players".to_string()),
+                    description: Some("get the players".to_string()),
+                    args: None,
+                    field_type: None,
+                    is_deprecated: None,
+                    deprecation_reason: None,
+                }]),
+                inputs: None,
+                interfaces: None,
+                enums: None,
+                possible_types: None,
+            }]),
+            directives: None,
+        };
+        assert_eq!(
+            "# Query\n\n> The root query\n\n## players\n\n> get the players\n\n".to_string(),
+            queries_to_markdown(schema)
+        );
+    }
+
     // Generic Markdown tests
 
     #[test]
