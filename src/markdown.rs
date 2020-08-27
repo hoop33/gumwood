@@ -379,7 +379,16 @@ mod tests {
             directives: None,
         };
         assert_eq!(
-            "# Query\n\n> The root query\n\n## players\n\n> get the players\n\n".to_string(),
+            r#"# Query
+
+> The root query
+
+## players
+
+> get the players
+
+"#
+            .to_string(),
             queries_to_markdown(schema)
         );
     }
@@ -452,7 +461,16 @@ mod tests {
             directives: None,
         };
         assert_eq!(
-            "# Mutation\n\n> The root mutation\n\n## addPlayer\n\n> add a player\n\n".to_string(),
+            r#"# Mutation
+
+> The root mutation
+
+## addPlayer
+
+> add a player
+
+"#
+            .to_string(),
             mutations_to_markdown(schema)
         );
     }
@@ -525,8 +543,70 @@ mod tests {
             directives: None,
         };
         assert_eq!(
-            "# Subscription\n\n> The root subscription\n\n## subscribePlayers\n\n> subscribe to players\n\n".to_string(),
+            r#"# Subscription
+
+> The root subscription
+
+## subscribePlayers
+
+> subscribe to players
+
+"#
+            .to_string(),
             subscriptions_to_markdown(schema)
+        );
+    }
+
+    #[test]
+    fn test_type_to_markdown_should_return_markdown() {
+        let typ = &Type {
+            name: Some("Player".to_string()),
+            description: Some("This is a player".to_string()),
+            kind: None,
+            inputs: None,
+            interfaces: None,
+            enums: None,
+            possible_types: None,
+            fields: Some(vec![Field {
+                name: Some("id".to_string()),
+                description: Some("The ID".to_string()),
+                args: None,
+                field_type: None,
+                is_deprecated: None,
+                deprecation_reason: None,
+            }]),
+        };
+        assert_eq!(
+            r#"# Player
+
+> This is a player
+
+## id
+
+> The ID
+
+"#
+            .to_string(),
+            type_to_markdown(typ)
+        );
+    }
+
+    #[test]
+    fn test_input_to_markdown_should_return_markdown() {
+        let input = &Input {
+            name: Some("PlayerInput".to_string()),
+            description: Some("Input for defining a player".to_string()),
+            input_type: None,
+            default_value: None,
+        };
+        assert_eq!(
+            r#"# PlayerInput
+
+> Input for defining a player
+
+"#
+            .to_string(),
+            input_to_markdown(input)
         );
     }
 
