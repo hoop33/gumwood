@@ -457,6 +457,79 @@ mod tests {
         );
     }
 
+    #[test]
+    fn test_subscriptions_to_markdown_should_return_empty_when_none() {
+        let schema = &Schema {
+            query_type: None,
+            mutation_type: None,
+            subscription_type: None,
+            types: None,
+            directives: None,
+        };
+        assert_eq!("".to_string(), subscriptions_to_markdown(schema));
+    }
+
+    #[test]
+    fn test_subscriptions_to_markdown_should_return_empty_when_some_and_no_members() {
+        let schema = &Schema {
+            query_type: None,
+            mutation_type: None,
+            subscription_type: Some(Type {
+                name: None,
+                kind: None,
+                description: None,
+                fields: None,
+                inputs: None,
+                interfaces: None,
+                enums: None,
+                possible_types: None,
+            }),
+            types: None,
+            directives: None,
+        };
+        assert_eq!("".to_string(), subscriptions_to_markdown(schema));
+    }
+
+    #[test]
+    fn test_subscriptions_to_markdown_should_return_markdown_when_some() {
+        let schema = &Schema {
+            query_type: None,
+            mutation_type: None,
+            subscription_type: Some(Type {
+                name: Some("Subscription".to_string()),
+                kind: None,
+                description: None,
+                fields: None,
+                inputs: None,
+                interfaces: None,
+                enums: None,
+                possible_types: None,
+            }),
+            types: Some(vec![Type {
+                name: Some("Subscription".to_string()),
+                kind: None,
+                description: Some("The root subscription".to_string()),
+                fields: Some(vec![Field {
+                    name: Some("subscribePlayers".to_string()),
+                    description: Some("subscribe to players".to_string()),
+                    args: None,
+                    field_type: None,
+                    is_deprecated: None,
+                    deprecation_reason: None,
+                }]),
+                inputs: None,
+                interfaces: None,
+                enums: None,
+                possible_types: None,
+            }]),
+            directives: None,
+        };
+        assert_eq!(
+            "# Subscription\n\n> The root subscription\n\n## subscribePlayers\n\n> subscribe to players\n\n".to_string(),
+            subscriptions_to_markdown(schema)
+        );
+    }
+
     // Generic Markdown tests
 
     #[test]
