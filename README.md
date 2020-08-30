@@ -20,7 +20,7 @@ gumwood 0.1.0
 Convert a GraphQL schema to Markdown
 
 USAGE:
-    gumwood [FLAGS] [OPTIONS] <url> --out-dir <out-dir>
+    gumwood [FLAGS] [OPTIONS] --out-dir <out-dir>
 
 FLAGS:
         --help        Prints help information
@@ -30,35 +30,37 @@ FLAGS:
 OPTIONS:
     -f, --front-matter <front-matter>    Front matter to include at the top of output files
     -h, --header <header>...             Header to send in name:value format; allows multiple
+    -j, --json <json>                    The file containing the JSON response of a GraphQL introspection query
     -o, --out-dir <out-dir>              The output directory for the generated markdown
-
-ARGS:
-    <url>    
+    -s, --schema <schema>                The GraphQL schema file
+    -u, --url <url>                      The URL to introspect for the GraphQL schema
 ```
+
+**Note:** You must specify a source: `--url`, `--json`, or `--schema`.
 
 Convert a GraphQL schema to a single markdown file:
 
 ```sh
-$ gumwood https://example.com/graphql --out-dir /path/to/output
+$ gumwood --url https://example.com/graphql --out-dir /path/to/output
 ```
 
 Convert a GraphQL schema to multiple markdown files, divided by type:
 
 ```sh
-$ gumwood https://example.com/graphql --out-dir /path/to/output --multiple
+$ gumwood --url https://example.com/graphql --out-dir /path/to/output --multiple
 ```
 
 Convert a GraphQL schema to multiple markdown files, divided by type, with front matter:
 
 ```sh
-$ gumwood https://example.com/graphql --out-dir /path/to/output --multiple \
+$ gumwood --url https://example.com/graphql --out-dir /path/to/output --multiple \
 --front-matter "key1:value1;key2:value2"
 ```
 
 Convert a GraphQL schema to multiple markdown files, divided by type, when the GraphQL endpoint requires authorization and a user agent:
 
 ```sh
-$ gumwood https://example.com/graphql --out-dir /path/to/output --multiple \
+$ gumwood --url https://example.com/graphql --out-dir /path/to/output --multiple \
 --header "Authorization: bearer myreallylongtoken" --header "User-Agent: gumwood"
 ```
 
@@ -66,6 +68,8 @@ $ gumwood https://example.com/graphql --out-dir /path/to/output --multiple \
 
 - [x] Schema load and parse from URL
 - [x] Custom headers in URL request
+- [ ] Generation from an introspection result
+- [ ] Generation from a schema file
 - [ ] Write to single or multiple files (-m flag)
 - [ ] Automatic versioning with semver
 - [ ] Automatic releases using GitHub Actions
