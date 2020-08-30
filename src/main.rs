@@ -75,9 +75,9 @@ fn get_schema(args: &Cli) -> Result<Schema, Box<dyn Error>> {
     if args.url.is_some() {
         schema = Schema::from_url(&args.url.as_ref().unwrap(), &args.header)?;
     } else if args.json.is_some() {
-        schema = Schema::from_json(&args.json.as_ref().unwrap(), &args.header)?;
+        schema = Schema::from_json(&args.json.as_ref().unwrap())?;
     } else if args.schema.is_some() {
-        schema = Schema::from_schema(&args.schema.as_ref().unwrap(), &args.header)?;
+        schema = Schema::from_schema(&args.schema.as_ref().unwrap())?;
     } else {
         return Err(Box::new(CliError::new(
             "you must specify url, json, or schema",

@@ -68,7 +68,7 @@ $ gumwood --url https://example.com/graphql --out-dir /path/to/output --multiple
 
 - [x] Schema load and parse from URL
 - [x] Custom headers in URL request
-- [ ] Generation from an introspection result
+- [x] Generation from an introspection result
 - [ ] Generation from a schema file
 - [ ] Write to single or multiple files (-m flag)
 - [ ] Automatic versioning with semver

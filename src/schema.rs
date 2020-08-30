@@ -1,7 +1,7 @@
 use reqwest::blocking::Client;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
-use std::{boxed::Box, error::Error, fmt, path::PathBuf};
+use std::{boxed::Box, error::Error, fmt, fs, path::PathBuf};
 
 #[derive(Debug)]
 struct SchemaError {
@@ -117,11 +117,12 @@ impl Schema {
         Schema::from_str(&text)
     }
 
-    pub fn from_json(_file: &PathBuf, _headers: &Vec<String>) -> Result<Schema, Box<dyn Error>> {
-        Err(Box::new(SchemaError::new("not yet implemented")))
+    pub fn from_json(file: &PathBuf) -> Result<Schema, Box<dyn Error>> {
+        let contents = fs::read_to_string(file)?;
+        Schema::from_str(&contents)
     }
 
-    pub fn from_schema(_file: &PathBuf, _headers: &Vec<String>) -> Result<Schema, Box<dyn Error>> {
+    pub fn from_schema(_file: &PathBuf) -> Result<Schema, Box<dyn Error>> {
         Err(Box::new(SchemaError::new("not yet implemented")))
     }
 
