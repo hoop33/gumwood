@@ -21,6 +21,11 @@ impl Markdown {
             "subscriptions".to_string(),
             subscriptions_to_markdown(schema),
         );
+        contents.insert(
+            "inputs".to_string(),
+            types_to_markdown(schema, "INPUT_OBJECT"),
+        );
+        contents.insert("objects".to_string(), types_to_markdown(schema, "OBJECT"));
 
         contents
     }
@@ -143,6 +148,17 @@ fn subscriptions_to_markdown(schema: &Schema) -> String {
     }
 }
 
+fn types_to_markdown(schema: &Schema, kind: &str) -> String {
+    let mut s = String::new();
+
+    let types = schema.get_types_of_kind(kind);
+    for typ in types.iter() {
+        s.push_str(&type_to_markdown(typ));
+    }
+
+    s
+}
+
 fn type_to_markdown(typ: &Type) -> String {
     let mut s = String::new();
 
@@ -165,7 +181,47 @@ fn type_to_markdown(typ: &Type) -> String {
         None => {}
     }
 
+    match &typ.inputs {
+        Some(inputs) => {
+            s.push_str(&to_header(2, "Inputs"));
+            s.push_str(&to_table_row(vec![
+                "Name",
+                "Type",
+                "Description",
+                "Default Value",
+            ]));
+            s.push_str(&to_table_separator(4));
+            for input in inputs.iter() {
+                s.push_str(&input_to_markdown_table_row(input));
+            }
+        }
+        None => {}
+    }
+
+    s.push_str("\n");
+
     s
+}
+
+fn input_to_markdown_table_row(input: &Input) -> String {
+    let name = match &input.name {
+        Some(name) => name.trim(),
+        None => "(unknown)",
+    };
+    let type_name = match input.input_type.as_ref() {
+        Some(typ) => typ.to_string(),
+        None => "".to_string(),
+    };
+    let description = match &input.description {
+        Some(description) => description.trim().replace("\n", ""),
+        None => "".to_string(),
+    };
+    let default_value = match &input.default_value {
+        Some(default_value) => default_value.trim().replace("\n", ""),
+        None => "".to_string(),
+    };
+
+    to_table_row(vec![&name, &type_name, &description, &default_value])
 }
 
 fn input_to_markdown(input: &Input) -> String {
@@ -305,10 +361,12 @@ mod tests {
             directives: None,
         };
         let map = markdown.generate_from_schema(schema);
-        assert_eq!(3, map.len());
+        assert_eq!(5, map.len());
         assert_eq!("".to_string(), map["queries"]);
         assert_eq!("".to_string(), map["mutations"]);
         assert_eq!("".to_string(), map["subscriptions"]);
+        assert_eq!("".to_string(), map["inputs"]);
+        assert_eq!("".to_string(), map["objects"]);
     }
 
     #[test]
@@ -584,6 +642,7 @@ mod tests {
 ## id
 
 > The ID
+
 
 "#
             .to_string(),
