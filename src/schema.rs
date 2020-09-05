@@ -3,6 +3,8 @@ use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::{boxed::Box, error::Error, fmt, fs, path::PathBuf};
 
+const TYPE_LEVELS: u32 = 7;
+
 #[derive(Debug)]
 struct SchemaError {
     message: String,
@@ -30,6 +32,7 @@ pub struct Type {
     pub kind: Option<String>,
     pub description: Option<String>,
     pub fields: Option<Vec<Field>>,
+    #[serde(alias = "inputFields")]
     pub inputs: Option<Vec<Input>>,
     pub interfaces: Option<Vec<TypeRef>>,
     pub enums: Option<Vec<Enum>>,
@@ -76,6 +79,49 @@ pub struct TypeRef {
     pub kind: Option<String>,
     #[serde(alias = "ofType")]
     pub of_type: Option<Box<TypeRef>>,
+}
+
+impl TypeRef {
+    pub fn is_required(&self) -> bool {
+        self.kind.is_some() && self.kind.as_ref().unwrap() == "NON_NULL"
+    }
+
+    pub fn is_list(&self) -> bool {
+        self.kind.is_some() && self.kind.as_ref().unwrap() == "LIST"
+    }
+
+    pub fn to_string(&self) -> String {
+        self.recurse_to_string(TYPE_LEVELS)
+    }
+
+    fn recurse_to_string(&self, level: u32) -> String {
+        if level == 0 {
+            return "".to_string();
+        }
+
+        let mut s = String::new();
+
+        let name = match &self.name {
+            Some(name) => name.clone(),
+            None => match &self.of_type {
+                Some(typ) => typ.recurse_to_string(level - 1).clone(),
+                None => "".to_string(),
+            },
+        };
+
+        s.push_str(&name);
+
+        if self.is_required() {
+            s.push_str("!");
+        }
+
+        if self.is_list() {
+            s.insert_str(0, "[");
+            s.push_str("]");
+        }
+
+        s
+    }
 }
 
 #[derive(Debug, Deserialize, Serialize)]
@@ -179,6 +225,28 @@ impl Schema {
             }
             None => None,
         }
+    }
+
+    pub fn get_types_of_kind(&self, kind: &str) -> Vec<&Type> {
+        let mut vec = Vec::new();
+
+        match &self.types {
+            Some(types) => {
+                for typ in types.iter() {
+                    match &typ.kind {
+                        Some(k) => {
+                            if k == kind {
+                                vec.push(typ);
+                            }
+                        }
+                        None => {}
+                    }
+                }
+            }
+            None => {}
+        }
+
+        vec
     }
 }
 
@@ -666,5 +734,168 @@ mod tests {
         let schema = Schema::from_str(&response)?;
         assert!(schema.get_type("you're not my").is_some());
         Ok(())
+    }
+
+    #[test]
+    fn test_typeref_is_required_should_return_false_when_kind_is_none() {
+        let tr = TypeRef {
+            name: None,
+            kind: None,
+            of_type: None,
+        };
+        assert!(!tr.is_required());
+    }
+
+    #[test]
+    fn test_typeref_is_required_should_return_false_when_kind_is_not_non_null() {
+        let tr = TypeRef {
+            name: None,
+            kind: Some("foo".to_string()),
+            of_type: None,
+        };
+        assert!(!tr.is_required());
+    }
+
+    #[test]
+    fn test_typeref_is_required_should_return_true_when_kind_is_non_null() {
+        let tr = TypeRef {
+            name: None,
+            kind: Some("NON_NULL".to_string()),
+            of_type: None,
+        };
+        assert!(tr.is_required());
+    }
+
+    #[test]
+    fn test_typeref_is_list_should_return_false_when_kind_is_none() {
+        let tr = TypeRef {
+            name: None,
+            kind: None,
+            of_type: None,
+        };
+        assert!(!tr.is_list());
+    }
+
+    #[test]
+    fn test_typeref_is_list_should_return_false_when_kind_is_not_non_null() {
+        let tr = TypeRef {
+            name: None,
+            kind: Some("foo".to_string()),
+            of_type: None,
+        };
+        assert!(!tr.is_list());
+    }
+
+    #[test]
+    fn test_typeref_is_list_should_return_true_when_kind_is_non_null() {
+        let tr = TypeRef {
+            name: None,
+            kind: Some("LIST".to_string()),
+            of_type: None,
+        };
+        assert!(tr.is_list());
+    }
+
+    #[test]
+    fn test_typeref_to_string_should_return_empty_when_none() {
+        let tr = TypeRef {
+            name: None,
+            kind: None,
+            of_type: None,
+        };
+        assert_eq!("", tr.to_string());
+    }
+
+    #[test]
+    fn test_typeref_to_string_should_return_name_when_not_required() {
+        let tr = TypeRef {
+            name: Some("myName".to_string()),
+            kind: None,
+            of_type: None,
+        };
+        assert_eq!("myName", tr.to_string());
+    }
+
+    #[test]
+    fn test_typeref_to_string_should_return_name_with_exclamation_when_required() {
+        let tr = TypeRef {
+            name: Some("myName".to_string()),
+            kind: Some("NON_NULL".to_string()),
+            of_type: None,
+        };
+        assert_eq!("myName!", tr.to_string());
+    }
+
+    #[test]
+    fn test_typeref_to_string_should_return_name_with_brackets_when_list() {
+        let tr = TypeRef {
+            name: Some("myName".to_string()),
+            kind: Some("LIST".to_string()),
+            of_type: None,
+        };
+        assert_eq!("[myName]", tr.to_string());
+    }
+
+    #[test]
+    fn test_typeref_to_string_should_return_name_with_brackets_and_exclamation_when_list_and_required(
+    ) {
+        let tr = TypeRef {
+            name: None,
+            kind: Some("LIST".to_string()),
+            of_type: Some(Box::new(TypeRef {
+                kind: Some("NON_NULL".to_string()),
+                name: Some("myName".to_string()),
+                of_type: None,
+            })),
+        };
+        assert_eq!("[myName!]", tr.to_string());
+    }
+
+    #[test]
+    fn test_typeref_to_string_should_return_name_with_brackets_and_exclamation_outside_when_list_and_required(
+    ) {
+        let tr = TypeRef {
+            name: None,
+            kind: Some("NON_NULL".to_string()),
+            of_type: Some(Box::new(TypeRef {
+                kind: Some("LIST".to_string()),
+                name: Some("myName".to_string()),
+                of_type: None,
+            })),
+        };
+        assert_eq!("[myName]!", tr.to_string());
+    }
+
+    #[test]
+    fn test_typeref_to_string_should_return_name_with_brackets_and_two_exclamation_when_list_and_required(
+    ) {
+        let tr = TypeRef {
+            name: None,
+            kind: Some("NON_NULL".to_string()),
+            of_type: Some(Box::new(TypeRef {
+                kind: Some("LIST".to_string()),
+                name: None,
+                of_type: Some(Box::new(TypeRef {
+                    kind: Some("NON_NULL".to_string()),
+                    name: Some("myName".to_string()),
+                    of_type: None,
+                })),
+            })),
+        };
+        assert_eq!("[myName!]!", tr.to_string());
+    }
+
+    #[test]
+    fn test_typeref_to_string_should_return_name_with_brackets_when_not_scalar() {
+        let tr = TypeRef {
+            name: None,
+            kind: Some("LIST".to_string()),
+            of_type: Some(Box::new(TypeRef {
+                kind: Some("INPUT_OBJECT".to_string()),
+                name: Some("MyInputObject".to_string()),
+                of_type: None,
+            })),
+        };
+        assert_eq!("[MyInputObject]", tr.to_string());
     }
 }
