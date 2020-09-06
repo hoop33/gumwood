@@ -191,7 +191,11 @@ fn type_to_markdown(typ: &Type) -> String {
                 "Default Value",
             ]));
             s.push_str(&to_table_separator(4));
-            for input in inputs.iter() {
+
+            let mut sorted = inputs.to_vec();
+            sorted.sort_by(|a, b| a.name.cmp(&b.name));
+
+            for input in sorted.iter() {
                 s.push_str(&input_to_markdown_table_row(input));
             }
         }

@@ -53,7 +53,7 @@ pub struct Field {
     pub deprecation_reason: Option<String>,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, Deserialize, Eq, Ord, PartialEq, PartialOrd, Serialize)]
 pub struct Input {
     pub name: Option<String>,
     pub description: Option<String>,
@@ -73,7 +73,7 @@ pub struct Enum {
     deprecation_reason: Option<String>,
 }
 
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Clone, Debug, Deserialize, Eq, Ord, PartialEq, PartialOrd, Serialize)]
 pub struct TypeRef {
     pub name: Option<String>,
     pub kind: Option<String>,
