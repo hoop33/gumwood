@@ -123,7 +123,7 @@ $ make html_coverage
 Gumwood generally follows an MVC pattern:
 
 * Model: `schema.rs`
-* View: `markdown.rs`
+* View: `schema_markdown.rs` (markdown functions that know about `schema`) and `markdown.rs` (generic markdown functions that know nothing about `schema`)
 * Controller: `main.rs`
 
 #### Schema

@@ -1,8 +1,9 @@
 mod markdown;
 mod schema;
+mod schema_markdown;
 
-use markdown::Markdown;
 use schema::Schema;
+use schema_markdown::Markdown;
 use std::{error::Error, fmt, fs::File, io::Write, path::PathBuf};
 use structopt::StructOpt;
 
