@@ -199,13 +199,9 @@ fn inputs_to_markdown_table(inputs: &Vec<Input>) -> String {
     let mut s = String::new();
 
     s.push_str(&to_header(2, "Inputs"));
-    s.push_str(&to_table_row(vec![
-        "Name",
-        "Type",
-        "Description",
-        "Default Value",
-    ]));
-    s.push_str(&to_table_separator(4));
+    let headers = vec!["Name", "Type", "Description", "Default Value"];
+    s.push_str(&to_table_row(&headers));
+    s.push_str(&to_table_separator(headers.len()));
 
     for input in inputs.iter() {
         s.push_str(&input_to_markdown_table_row(input));
@@ -232,7 +228,7 @@ fn input_to_markdown_table_row(input: &Input) -> String {
         None => "".to_string(),
     };
 
-    to_table_row(vec![&name, &type_name, &description, &default_value])
+    to_table_row(&vec![&name, &type_name, &description, &default_value])
 }
 
 fn input_to_markdown(input: &Input) -> String {
@@ -285,7 +281,7 @@ fn field_to_markdown(field: &Field) -> String {
         Some(args) => {
             if args.len() > 0 {
                 s.push_str(&to_header(3, "Arguments"));
-                s.push_str(&to_table_row(vec!["Name", "Type", "Kind", "Description"]));
+                s.push_str(&to_table_row(&vec!["Name", "Type", "Kind", "Description"]));
                 s.push_str(&to_table_separator(4));
                 for arg in args {
                     let name = match &arg.name {
@@ -305,7 +301,7 @@ fn field_to_markdown(field: &Field) -> String {
                         Some(description) => description.trim().replace("\n", ""),
                         None => "".to_string(),
                     };
-                    s.push_str(&to_table_row(vec![&name, &type_name, &kind, &description]));
+                    s.push_str(&to_table_row(&vec![&name, &type_name, &kind, &description]));
                 }
                 s.push_str("\n");
             }
@@ -339,12 +335,12 @@ fn to_notice(notice: &str) -> String {
     format!("_{}_\n", notice)
 }
 
-fn to_table_row(items: Vec<&str>) -> String {
+fn to_table_row(items: &Vec<&str>) -> String {
     format!("| {} |\n", items.join(" | "))
 }
 
 fn to_table_separator(num: usize) -> String {
-    to_table_row(vec!["---"; num])
+    to_table_row(&vec!["---"; num])
 }
 
 #[cfg(test)]
@@ -712,12 +708,12 @@ mod tests {
 
     #[test]
     fn test_to_table_row_should_create_row_when_empty() {
-        assert_eq!("|  |\n", to_table_row(vec![]));
+        assert_eq!("|  |\n", to_table_row(&vec![]));
     }
 
     #[test]
     fn test_to_table_row_should_create_row_when_not_empty() {
-        assert_eq!("| a | b | c |\n", to_table_row(vec!["a", "b", "c"]));
+        assert_eq!("| a | b | c |\n", to_table_row(&vec!["a", "b", "c"]));
     }
 
     #[test]
