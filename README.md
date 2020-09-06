@@ -76,12 +76,12 @@ $ gumwood --url https://example.com/graphql --out-dir /path/to/output --multiple
 - [ ] Add front matter to generated file(s)
 - [ ] Allow variables in front matter
 - [ ] Better error messaging &mdash; maybe a debug mode?
-- [ ] Objects
-- [ ] Inputs
-- [ ] Interfaces
-- [ ] Enums
-- [ ] Unions
-- [ ] Scalars
+- [x] Objects
+- [x] Inputs
+- [x] Interfaces
+- [x] Enums
+- [x] Unions
+- [x] Scalars
 - [ ] Add links (e.g. from types listed in queries to their actual types)
 - [ ] More/better information on Queries markdown
 - [ ] More/better information on Mutations markdown

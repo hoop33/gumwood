@@ -1,5 +1,5 @@
 use super::markdown::*;
-use super::schema::{Field, Input, Schema, Type};
+use super::schema::{Enum, Field, Input, Schema, Type};
 use std::collections::HashMap;
 use std::error::Error;
 
@@ -29,6 +29,22 @@ impl Markdown {
         contents.insert(
             "objects".to_string(),
             types_to_markdown(schema, "Objects", "OBJECT"),
+        );
+        contents.insert(
+            "enums".to_string(),
+            types_to_markdown(schema, "Enums", "ENUM"),
+        );
+        contents.insert(
+            "interfaces".to_string(),
+            types_to_markdown(schema, "Interfaces", "INTERFACE"),
+        );
+        contents.insert(
+            "unions".to_string(),
+            types_to_markdown(schema, "Unions", "UNION"),
+        );
+        contents.insert(
+            "scalars".to_string(),
+            types_to_markdown(schema, "Scalars", "SCALAR"),
         );
 
         contents
@@ -158,7 +174,7 @@ fn types_to_markdown(schema: &Schema, title: &str, kind: &str) -> String {
     let mut types = schema.get_types_of_kind(kind);
 
     if types.len() > 0 {
-        s.push_str(&to_header(1, &title));
+        s.push_str(&to_header(1, title));
 
         types.sort_by(|a, b| a.name.cmp(&b.name));
 
@@ -203,7 +219,31 @@ fn type_to_markdown(typ: &Type) -> String {
         None => {}
     }
 
-    s.push_str("\n");
+    match &typ.enums {
+        Some(enums) => {
+            s.push_str(&to_header(3, "Values"));
+            let mut sorted = enums.to_vec();
+            sorted.sort_by(|a, b| a.name.cmp(&b.name));
+            s.push_str(&enums_to_markdown_table(&sorted));
+        }
+        None => {}
+    }
+
+    match &typ.possible_types {
+        Some(possible_types) => {
+            s.push_str(&to_header(3, "Implemented by"));
+            let mut names: Vec<&str> = possible_types
+                .iter()
+                .map(|typ| match &typ.name {
+                    Some(name) => name,
+                    None => "",
+                })
+                .collect();
+            names.sort();
+            s.push_str(&to_list(&names));
+        }
+        None => {}
+    }
 
     s
 }
@@ -219,6 +259,8 @@ fn fields_to_markdown_table(fields: &Vec<Field>) -> String {
         s.push_str(&field_to_markdown_table_row(field));
     }
 
+    s.push_str("\n");
+
     s
 }
 
@@ -232,6 +274,24 @@ fn inputs_to_markdown_table(inputs: &Vec<Input>) -> String {
     for input in inputs.iter() {
         s.push_str(&input_to_markdown_table_row(input));
     }
+
+    s.push_str("\n");
+
+    s
+}
+
+fn enums_to_markdown_table(enums: &Vec<Enum>) -> String {
+    let mut s = String::new();
+
+    let headers = vec!["Name", "Description", "Deprecated?"];
+    s.push_str(&to_table_row(&headers));
+    s.push_str(&to_table_separator(headers.len()));
+
+    for enm in enums.iter() {
+        s.push_str(&enum_to_markdown_table_row(enm));
+    }
+
+    s.push_str("\n");
 
     s
 }
@@ -272,6 +332,33 @@ fn input_to_markdown_table_row(input: &Input) -> String {
     };
 
     to_table_row(&vec![&name, &type_name, &description, &default_value])
+}
+
+fn enum_to_markdown_table_row(enm: &Enum) -> String {
+    let name = match &enm.name {
+        Some(name) => name.trim(),
+        None => "(unknown)",
+    };
+    let description = match &enm.description {
+        Some(description) => description.trim().replace("\n", ""),
+        None => "".to_string(),
+    };
+    let is_deprecated = match &enm.is_deprecated {
+        Some(is_deprecated) => *is_deprecated,
+        None => false,
+    };
+    let deprecation_reason = match &enm.deprecation_reason {
+        Some(deprecation_reason) => deprecation_reason,
+        None => "",
+    };
+
+    let dr = if is_deprecated {
+        deprecation_reason
+    } else {
+        "no"
+    };
+
+    to_table_row(&vec![&name, &description, &dr])
 }
 
 fn input_to_markdown(input: &Input) -> String {
@@ -380,12 +467,16 @@ mod tests {
             directives: None,
         };
         let map = markdown.generate_from_schema(schema);
-        assert_eq!(5, map.len());
+        assert_eq!(9, map.len());
         assert_eq!("".to_string(), map["queries"]);
         assert_eq!("".to_string(), map["mutations"]);
         assert_eq!("".to_string(), map["subscriptions"]);
         assert_eq!("".to_string(), map["inputs"]);
         assert_eq!("".to_string(), map["objects"]);
+        assert_eq!("".to_string(), map["enums"]);
+        assert_eq!("".to_string(), map["interfaces"]);
+        assert_eq!("".to_string(), map["unions"]);
+        assert_eq!("".to_string(), map["scalars"]);
     }
 
     #[test]

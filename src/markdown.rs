@@ -14,6 +14,11 @@ pub fn to_label(label: &str, value: &str) -> String {
     format!("**{}:** {}\n\n", label, value)
 }
 
+pub fn to_list(items: &Vec<&str>) -> String {
+    let list: String = items.iter().map(|item| format!("* {}\n", item)).collect();
+    format!("{}\n", list)
+}
+
 pub fn to_notice(notice: &str) -> String {
     format!("_{}_\n", notice)
 }
@@ -78,5 +83,15 @@ mod tests {
     #[test]
     fn test_to_table_separator_should_create_row_when_not_empty() {
         assert_eq!("| --- | --- | --- |\n", to_table_separator(3));
+    }
+
+    #[test]
+    fn test_to_list_should_return_cr_when_empty() {
+        assert_eq!("\n", to_list(&vec![]));
+    }
+
+    #[test]
+    fn test_to_list_should_return_list_when_not_empty() {
+        assert_eq!("* a\n* b\n* c\n\n", to_list(&vec!["a", "b", "c"]));
     }
 }

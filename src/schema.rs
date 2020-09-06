@@ -35,6 +35,7 @@ pub struct Type {
     #[serde(alias = "inputFields")]
     pub inputs: Option<Vec<Input>>,
     pub interfaces: Option<Vec<TypeRef>>,
+    #[serde(alias = "enumValues")]
     pub enums: Option<Vec<Enum>>,
     #[serde(alias = "possibleTypes")]
     pub possible_types: Option<Vec<TypeRef>>,
@@ -63,14 +64,14 @@ pub struct Input {
     pub default_value: Option<String>,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, Deserialize, Eq, Ord, PartialEq, PartialOrd, Serialize)]
 pub struct Enum {
-    name: Option<String>,
-    description: Option<String>,
+    pub name: Option<String>,
+    pub description: Option<String>,
     #[serde(alias = "isDeprecated")]
-    is_deprecated: Option<bool>,
+    pub is_deprecated: Option<bool>,
     #[serde(alias = "deprecationReason")]
-    deprecation_reason: Option<String>,
+    pub deprecation_reason: Option<String>,
 }
 
 #[derive(Clone, Debug, Deserialize, Eq, Ord, PartialEq, PartialOrd, Serialize)]
