@@ -183,26 +183,33 @@ fn type_to_markdown(typ: &Type) -> String {
 
     match &typ.inputs {
         Some(inputs) => {
-            s.push_str(&to_header(2, "Inputs"));
-            s.push_str(&to_table_row(vec![
-                "Name",
-                "Type",
-                "Description",
-                "Default Value",
-            ]));
-            s.push_str(&to_table_separator(4));
-
             let mut sorted = inputs.to_vec();
             sorted.sort_by(|a, b| a.name.cmp(&b.name));
-
-            for input in sorted.iter() {
-                s.push_str(&input_to_markdown_table_row(input));
-            }
+            s.push_str(&inputs_to_markdown_table(&sorted));
         }
         None => {}
     }
 
     s.push_str("\n");
+
+    s
+}
+
+fn inputs_to_markdown_table(inputs: &Vec<Input>) -> String {
+    let mut s = String::new();
+
+    s.push_str(&to_header(2, "Inputs"));
+    s.push_str(&to_table_row(vec![
+        "Name",
+        "Type",
+        "Description",
+        "Default Value",
+    ]));
+    s.push_str(&to_table_separator(4));
+
+    for input in inputs.iter() {
+        s.push_str(&input_to_markdown_table_row(input));
+    }
 
     s
 }
