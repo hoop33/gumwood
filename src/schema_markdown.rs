@@ -24,9 +24,12 @@ impl Markdown {
         );
         contents.insert(
             "inputs".to_string(),
-            types_to_markdown(schema, "INPUT_OBJECT"),
+            types_to_markdown(schema, "Inputs", "INPUT_OBJECT"),
         );
-        contents.insert("objects".to_string(), types_to_markdown(schema, "OBJECT"));
+        contents.insert(
+            "objects".to_string(),
+            types_to_markdown(schema, "Objects", "OBJECT"),
+        );
 
         contents
     }
@@ -149,12 +152,19 @@ fn subscriptions_to_markdown(schema: &Schema) -> String {
     }
 }
 
-fn types_to_markdown(schema: &Schema, kind: &str) -> String {
+fn types_to_markdown(schema: &Schema, title: &str, kind: &str) -> String {
     let mut s = String::new();
 
-    let types = schema.get_types_of_kind(kind);
-    for typ in types.iter() {
-        s.push_str(&type_to_markdown(typ));
+    let mut types = schema.get_types_of_kind(kind);
+
+    if types.len() > 0 {
+        s.push_str(&to_header(1, &title));
+
+        types.sort_by(|a, b| a.name.cmp(&b.name));
+
+        for typ in types.iter() {
+            s.push_str(&type_to_markdown(typ));
+        }
     }
 
     s
@@ -164,7 +174,7 @@ fn type_to_markdown(typ: &Type) -> String {
     let mut s = String::new();
 
     match &typ.name {
-        Some(name) => s.push_str(&to_header(1, &name)),
+        Some(name) => s.push_str(&to_header(2, &name)),
         None => {}
     }
 
@@ -175,15 +185,17 @@ fn type_to_markdown(typ: &Type) -> String {
 
     match &typ.fields {
         Some(fields) => {
-            for field in fields.iter() {
-                s.push_str(&field_to_markdown(field));
-            }
+            s.push_str(&to_header(3, "Fields"));
+            let mut sorted = fields.to_vec();
+            sorted.sort_by(|a, b| a.name.cmp(&b.name));
+            s.push_str(&fields_to_markdown_table(&sorted));
         }
         None => {}
     }
 
     match &typ.inputs {
         Some(inputs) => {
+            s.push_str(&to_header(3, "Inputs"));
             let mut sorted = inputs.to_vec();
             sorted.sort_by(|a, b| a.name.cmp(&b.name));
             s.push_str(&inputs_to_markdown_table(&sorted));
@@ -196,10 +208,23 @@ fn type_to_markdown(typ: &Type) -> String {
     s
 }
 
+fn fields_to_markdown_table(fields: &Vec<Field>) -> String {
+    let mut s = String::new();
+
+    let headers = vec!["Name", "Type", "Description"];
+    s.push_str(&to_table_row(&headers));
+    s.push_str(&to_table_separator(headers.len()));
+
+    for field in fields.iter() {
+        s.push_str(&field_to_markdown_table_row(field));
+    }
+
+    s
+}
+
 fn inputs_to_markdown_table(inputs: &Vec<Input>) -> String {
     let mut s = String::new();
 
-    s.push_str(&to_header(2, "Inputs"));
     let headers = vec!["Name", "Type", "Description", "Default Value"];
     s.push_str(&to_table_row(&headers));
     s.push_str(&to_table_separator(headers.len()));
@@ -209,6 +234,23 @@ fn inputs_to_markdown_table(inputs: &Vec<Input>) -> String {
     }
 
     s
+}
+
+fn field_to_markdown_table_row(field: &Field) -> String {
+    let name = match &field.name {
+        Some(name) => name.trim(),
+        None => "(unknown)",
+    };
+    let type_name = match field.field_type.as_ref() {
+        Some(typ) => typ.to_string(),
+        None => "".to_string(),
+    };
+    let description = match &field.description {
+        Some(description) => description.trim().replace("\n", ""),
+        None => "".to_string(),
+    };
+
+    to_table_row(&vec![&name, &type_name, &description])
 }
 
 fn input_to_markdown_table_row(input: &Input) -> String {
@@ -612,14 +654,15 @@ mod tests {
             }]),
         };
         assert_eq!(
-            r#"# Player
+            r#"## Player
 
 > This is a player
 
-## id
+### Fields
 
-> The ID
-
+| Name | Type | Description |
+| --- | --- | --- |
+| id |  | The ID |
 
 "#
             .to_string(),

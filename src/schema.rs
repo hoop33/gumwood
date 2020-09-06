@@ -40,7 +40,7 @@ pub struct Type {
     pub possible_types: Option<Vec<TypeRef>>,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, Deserialize, Eq, Ord, PartialEq, PartialOrd, Serialize)]
 pub struct Field {
     pub name: Option<String>,
     pub description: Option<String>,
