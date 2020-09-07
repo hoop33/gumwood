@@ -899,4 +899,30 @@ mod tests {
         };
         assert_eq!("[MyInputObject]", tr.decorated_name());
     }
+
+    #[test]
+    fn test_get_types_of_kind_should_return_only_types_of_kind() {
+        let response = r#"{
+        "data": {
+            "__schema": {
+                "types": [
+                    {
+                        "kind": "FOO"
+                    },
+                    {
+                        "kind": "BAR"
+                    },
+                    {
+                        "kind": "FOO"
+                    },
+                    {
+                        "name": "FOO"
+                    }
+                ]
+            }
+        }
+    }"#;
+        let schema = Schema::from_str(&response).unwrap();
+        assert_eq!(2, schema.get_types_of_kind("FOO").len());
+    }
 }

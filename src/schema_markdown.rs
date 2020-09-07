@@ -622,6 +622,61 @@ mod tests {
     }
 
     #[test]
+    fn test_types_to_markdown_should_return_markdown() {
+        let schema = &Schema {
+            query_type: None,
+            mutation_type: None,
+            subscription_type: None,
+            types: Some(vec![Type {
+                name: Some("Player".to_string()),
+                kind: Some("OBJECT".to_string()),
+                description: Some("A player".to_string()),
+                fields: Some(vec![
+                    Field {
+                        name: Some("firstName".to_string()),
+                        description: Some("The player's first name".to_string()),
+                        args: None,
+                        field_type: None,
+                        is_deprecated: None,
+                        deprecation_reason: None,
+                    },
+                    Field {
+                        name: Some("lastName".to_string()),
+                        description: Some("The player's last name".to_string()),
+                        args: None,
+                        field_type: None,
+                        is_deprecated: None,
+                        deprecation_reason: None,
+                    },
+                ]),
+                inputs: None,
+                interfaces: None,
+                enums: None,
+                possible_types: None,
+            }]),
+            directives: None,
+        };
+        assert_eq!(
+            r#"# Objects
+
+## Player
+
+> A player
+
+### Fields
+
+| Name | Type | Description |
+| --- | --- | --- |
+| firstName |  | The player's first name |
+| lastName |  | The player's last name |
+
+"#
+            .to_string(),
+            types_to_markdown(schema, "Objects", "OBJECT")
+        );
+    }
+
+    #[test]
     fn test_type_to_markdown_should_return_markdown() {
         let typ = &Type {
             name: Some("Player".to_string()),
