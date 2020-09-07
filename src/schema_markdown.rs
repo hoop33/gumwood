@@ -400,10 +400,7 @@ fn field_to_markdown(field: &Field) -> String {
     }
 
     match &field.field_type {
-        Some(typ) => match &typ.name {
-            Some(name) => s.push_str(&to_label("Type", &name)),
-            None => {}
-        },
+        Some(typ) => s.push_str(&to_label("Type", &typ.to_string())),
         None => {}
     }
 
@@ -411,29 +408,9 @@ fn field_to_markdown(field: &Field) -> String {
         Some(args) => {
             if args.len() > 0 {
                 s.push_str(&to_header(3, "Arguments"));
-                s.push_str(&to_table_row(&vec!["Name", "Type", "Kind", "Description"]));
-                s.push_str(&to_table_separator(4));
-                for arg in args {
-                    let name = match &arg.name {
-                        Some(name) => name.trim(),
-                        None => "(unknown)",
-                    };
-                    let type_name = match arg.input_type.as_ref().and_then(|typ| typ.name.as_ref())
-                    {
-                        Some(type_name) => type_name.clone(),
-                        None => "".to_string(),
-                    };
-                    let kind = match arg.input_type.as_ref().and_then(|typ| typ.kind.as_ref()) {
-                        Some(kind) => kind.clone(),
-                        None => "".to_string(),
-                    };
-                    let description = match &arg.description {
-                        Some(description) => description.trim().replace("\n", ""),
-                        None => "".to_string(),
-                    };
-                    s.push_str(&to_table_row(&vec![&name, &type_name, &kind, &description]));
-                }
-                s.push_str("\n");
+                let mut sorted = args.to_vec();
+                sorted.sort_by(|a, b| a.name.cmp(&b.name));
+                s.push_str(&inputs_to_markdown_table(&sorted));
             }
         }
         None => {}
