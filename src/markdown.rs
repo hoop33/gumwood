@@ -14,7 +14,7 @@ pub fn to_label(label: &str, value: &str) -> String {
     format!("**{}:** {}\n\n", label, value)
 }
 
-pub fn to_list(items: &Vec<&str>) -> String {
+pub fn to_list(items: &[&str]) -> String {
     let list: String = items.iter().map(|item| format!("* {}\n", item)).collect();
     format!("{}\n", list)
 }
@@ -23,7 +23,7 @@ pub fn to_notice(notice: &str) -> String {
     format!("_{}_\n", notice)
 }
 
-pub fn to_table_row(items: &Vec<&str>) -> String {
+pub fn to_table_row(items: &[&str]) -> String {
     format!("| {} |\n", items.join(" | "))
 }
 

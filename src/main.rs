@@ -95,7 +95,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     let markdown = Markdown::with_front_matter(args.front_matter)?;
     let contents = markdown.generate_from_schema(&schema);
     for (name, markdown) in contents {
-        if markdown.len() > 0 {
+        if !markdown.is_empty() {
             let out_file = format!("{}.md", name);
             let mut file = File::create(&args.out_dir.join(out_file))?;
             file.write_all(markdown.as_bytes())?;

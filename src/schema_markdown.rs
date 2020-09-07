@@ -60,28 +60,25 @@ impl Markdown {
 fn schema_type_to_markdown(schema: &Schema, type_name: Option<String>) -> String {
     let mut s = String::new();
 
-    match type_name.and_then(|name| schema.get_type(&name)) {
-        Some(typ) => {
-            match &typ.name {
-                Some(name) => s.push_str(&to_header(1, &name)),
-                None => {}
-            }
-
-            match &typ.description {
-                Some(description) => s.push_str(&to_description(&description)),
-                None => {}
-            }
-
-            match &typ.fields {
-                Some(fields) => {
-                    for field in fields.iter() {
-                        s.push_str(&field_to_markdown(field));
-                    }
-                }
-                None => {}
-            }
+    if let Some(typ) = type_name.and_then(|name| schema.get_type(&name)) {
+        match &typ.name {
+            Some(name) => s.push_str(&to_header(1, &name)),
+            None => {}
         }
-        None => {}
+
+        match &typ.description {
+            Some(description) => s.push_str(&to_description(&description)),
+            None => {}
+        }
+
+        match &typ.fields {
+            Some(fields) => {
+                for field in fields.iter() {
+                    s.push_str(&field_to_markdown(field));
+                }
+            }
+            None => {}
+        }
     }
 
     s
@@ -92,7 +89,7 @@ fn types_to_markdown(schema: &Schema, title: &str, kind: &str) -> String {
 
     let mut types = schema.get_types_of_kind(kind);
 
-    if types.len() > 0 {
+    if !types.is_empty() {
         s.push_str(&to_header(1, title));
 
         types.sort_by(|a, b| a.name.cmp(&b.name));
@@ -167,7 +164,7 @@ fn type_to_markdown(typ: &Type) -> String {
     s
 }
 
-fn fields_to_markdown_table(fields: &Vec<Field>) -> String {
+fn fields_to_markdown_table(fields: &[Field]) -> String {
     let mut s = String::new();
 
     let headers = vec!["Name", "Type", "Description"];
@@ -183,7 +180,7 @@ fn fields_to_markdown_table(fields: &Vec<Field>) -> String {
     s
 }
 
-fn inputs_to_markdown_table(inputs: &Vec<Input>) -> String {
+fn inputs_to_markdown_table(inputs: &[Input]) -> String {
     let mut s = String::new();
 
     let headers = vec!["Name", "Type", "Description", "Default Value"];
@@ -199,7 +196,7 @@ fn inputs_to_markdown_table(inputs: &Vec<Input>) -> String {
     s
 }
 
-fn enums_to_markdown_table(enums: &Vec<Enum>) -> String {
+fn enums_to_markdown_table(enums: &[Enum]) -> String {
     let mut s = String::new();
 
     let headers = vec!["Name", "Description", "Deprecated?"];
@@ -221,7 +218,7 @@ fn field_to_markdown_table_row(field: &Field) -> String {
         None => "(unknown)",
     };
     let type_name = match field.field_type.as_ref() {
-        Some(typ) => typ.to_string(),
+        Some(typ) => typ.decorated_name(),
         None => "".to_string(),
     };
     let description = match &field.description {
@@ -229,7 +226,7 @@ fn field_to_markdown_table_row(field: &Field) -> String {
         None => "".to_string(),
     };
 
-    to_table_row(&vec![&name, &type_name, &description])
+    to_table_row(&[&name, &type_name, &description])
 }
 
 fn input_to_markdown_table_row(input: &Input) -> String {
@@ -238,7 +235,7 @@ fn input_to_markdown_table_row(input: &Input) -> String {
         None => "(unknown)",
     };
     let type_name = match input.input_type.as_ref() {
-        Some(typ) => typ.to_string(),
+        Some(typ) => typ.decorated_name(),
         None => "".to_string(),
     };
     let description = match &input.description {
@@ -250,7 +247,7 @@ fn input_to_markdown_table_row(input: &Input) -> String {
         None => "".to_string(),
     };
 
-    to_table_row(&vec![&name, &type_name, &description, &default_value])
+    to_table_row(&[&name, &type_name, &description, &default_value])
 }
 
 fn enum_to_markdown_table_row(enm: &Enum) -> String {
@@ -277,7 +274,7 @@ fn enum_to_markdown_table_row(enm: &Enum) -> String {
         "no"
     };
 
-    to_table_row(&vec![&name, &description, &dr])
+    to_table_row(&[&name, &description, &dr])
 }
 
 fn field_to_markdown(field: &Field) -> String {
@@ -303,13 +300,13 @@ fn field_to_markdown(field: &Field) -> String {
     }
 
     match &field.field_type {
-        Some(typ) => s.push_str(&to_label("Type", &typ.to_string())),
+        Some(typ) => s.push_str(&to_label("Type", &typ.decorated_name())),
         None => {}
     }
 
     match &field.args {
         Some(args) => {
-            if args.len() > 0 {
+            if !args.is_empty() {
                 s.push_str(&to_header(3, "Arguments"));
                 let mut sorted = args.to_vec();
                 sorted.sort_by(|a, b| a.name.cmp(&b.name));

@@ -91,11 +91,11 @@ impl TypeRef {
         self.kind.is_some() && self.kind.as_ref().unwrap() == "LIST"
     }
 
-    pub fn to_string(&self) -> String {
-        self.recurse_to_string(TYPE_LEVELS)
+    pub fn decorated_name(&self) -> String {
+        self.recurse_decorated_name(TYPE_LEVELS)
     }
 
-    fn recurse_to_string(&self, level: u32) -> String {
+    fn recurse_decorated_name(&self, level: u32) -> String {
         if level == 0 {
             return "".to_string();
         }
@@ -105,7 +105,7 @@ impl TypeRef {
         let name = match &self.name {
             Some(name) => name.clone(),
             None => match &self.of_type {
-                Some(typ) => typ.recurse_to_string(level - 1).clone(),
+                Some(typ) => typ.recurse_decorated_name(level - 1),
                 None => "".to_string(),
             },
         };
@@ -146,11 +146,11 @@ pub struct Schema {
 }
 
 impl Schema {
-    pub fn from_url(url: &str, headers: &Vec<String>) -> Result<Schema, Box<dyn Error>> {
+    pub fn from_url(url: &str, headers: &[String]) -> Result<Schema, Box<dyn Error>> {
         let client = Client::new();
         let mut post = client.post(url);
         for header in headers {
-            let split: Vec<&str> = header.split(":").collect();
+            let split: Vec<&str> = header.split(':').collect();
             if split.len() == 2 {
                 post = post.header(split[0], split[1]);
             }
@@ -179,20 +179,20 @@ impl Schema {
                 Some(data) => match data.get("__schema") {
                     Some(schema) => {
                         let s: Schema = serde_json::from_str(&schema.to_string())?;
-                        return Ok(s);
+                        Ok(s)
                     }
-                    None => return Err(Box::new(SchemaError::new("schema not in response"))),
+                    None => Err(Box::new(SchemaError::new("schema not in response"))),
                 },
-                None => return Err(Box::new(SchemaError::new("data not in response"))),
+                None => Err(Box::new(SchemaError::new("data not in response"))),
             },
             _ => {
                 // I don't think this is reachable; as far as I can tell,
                 // serde_json::from_str() fails if text is not a JSON object.
                 // You can't pass it an array, for example. So if line 14 passes,
                 // we're already guaranteed to have an object.
-                return Err(Box::new(SchemaError::new("response format not an object")));
+                Err(Box::new(SchemaError::new("response format not an object")))
             }
-        };
+        }
     }
 
     pub fn get_query_name(&self) -> Option<String> {
@@ -222,7 +222,7 @@ impl Schema {
                         None => {}
                     }
                 }
-                return None;
+                None
             }
             None => None,
         }
@@ -804,7 +804,7 @@ mod tests {
             kind: None,
             of_type: None,
         };
-        assert_eq!("", tr.to_string());
+        assert_eq!("", tr.decorated_name());
     }
 
     #[test]
@@ -814,7 +814,7 @@ mod tests {
             kind: None,
             of_type: None,
         };
-        assert_eq!("myName", tr.to_string());
+        assert_eq!("myName", tr.decorated_name());
     }
 
     #[test]
@@ -824,7 +824,7 @@ mod tests {
             kind: Some("NON_NULL".to_string()),
             of_type: None,
         };
-        assert_eq!("myName!", tr.to_string());
+        assert_eq!("myName!", tr.decorated_name());
     }
 
     #[test]
@@ -834,7 +834,7 @@ mod tests {
             kind: Some("LIST".to_string()),
             of_type: None,
         };
-        assert_eq!("[myName]", tr.to_string());
+        assert_eq!("[myName]", tr.decorated_name());
     }
 
     #[test]
@@ -849,7 +849,7 @@ mod tests {
                 of_type: None,
             })),
         };
-        assert_eq!("[myName!]", tr.to_string());
+        assert_eq!("[myName!]", tr.decorated_name());
     }
 
     #[test]
@@ -864,7 +864,7 @@ mod tests {
                 of_type: None,
             })),
         };
-        assert_eq!("[myName]!", tr.to_string());
+        assert_eq!("[myName]!", tr.decorated_name());
     }
 
     #[test]
@@ -883,7 +883,7 @@ mod tests {
                 })),
             })),
         };
-        assert_eq!("[myName!]!", tr.to_string());
+        assert_eq!("[myName!]!", tr.decorated_name());
     }
 
     #[test]
@@ -897,6 +897,6 @@ mod tests {
                 of_type: None,
             })),
         };
-        assert_eq!("[MyInputObject]", tr.to_string());
+        assert_eq!("[MyInputObject]", tr.decorated_name());
     }
 }
