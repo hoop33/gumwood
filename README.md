@@ -6,7 +6,7 @@
 
 ## Introduction
 
-Gumwood is pre-alpha. It doesn't work yet. 
+Gumwood is pre-alpha. Very early days. Things are changing frequently. Not everything documented here works yet.
 
 Its purpose is to prepare a GraphQL schema for publication on a Gatsby or Docusaurus site, or any other site that generates HTML documentation from markdown files.
 
@@ -132,7 +132,7 @@ Gumwood generally follows an MVC pattern:
 
 Responsible for running a GraphQL Introspection query against the provided URL and parsing it into Rust structures that represent the GraphQL schema.
 
-#### Markdown
+#### Schema Markdown
 
 Responsible for converting a GraphQL schema into opinionated markdown. Stores its result in a HashMap of type => markdown, where type is:
 
@@ -148,13 +148,17 @@ Responsible for converting a GraphQL schema into opinionated markdown. Stores it
 
 Note: that list is cribbed from GitHub's GraphQL documentation <https://docs.github.com/en/graphql/reference> and is subject to change as I better understand the problem space.
 
+#### Markdown
+
+Responsible for generating generic markdown &mdash; utility functions that know nothing about the GraphQL schema.
+
 #### Main
 
 Responsible for:
 
 * Parsing the command-line arguments
 * Getting the schema from `schema.rs`
-* Getting the markdown from `markdown.rs`
+* Getting the markdown from `schema_markdown.rs`
 * Writing the markdown file(s)
 
 ## FAQ
