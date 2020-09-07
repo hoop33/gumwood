@@ -1,6 +1,6 @@
 # Gumwood
 
-![badge](https://action-badges.now.sh/hoop33/gumwood?action=Rust)
+![badge](https://github.com/hoop33/gumwood/workflows/Rust/badge.svg)
 
 > Convert a GraphQL schema to markdown
 
