@@ -16,11 +16,17 @@ impl Markdown {
     pub fn generate_from_schema(&self, schema: &Schema) -> HashMap<String, String> {
         let mut contents: HashMap<String, String> = HashMap::new();
 
-        contents.insert("queries".to_string(), queries_to_markdown(schema));
-        contents.insert("mutations".to_string(), mutations_to_markdown(schema));
+        contents.insert(
+            "queries".to_string(),
+            schema_type_to_markdown(schema, schema.get_query_name()),
+        );
+        contents.insert(
+            "mutations".to_string(),
+            schema_type_to_markdown(schema, schema.get_mutation_name()),
+        );
         contents.insert(
             "subscriptions".to_string(),
-            subscriptions_to_markdown(schema),
+            schema_type_to_markdown(schema, schema.get_subscription_name()),
         );
         contents.insert(
             "inputs".to_string(),
@@ -51,25 +57,22 @@ impl Markdown {
     }
 }
 
-fn queries_to_markdown(schema: &Schema) -> String {
-    match schema
-        .get_query_name()
-        .and_then(|query_name| schema.get_type(&query_name))
-    {
-        Some(query_type) => {
-            let mut s = String::new();
+fn schema_type_to_markdown(schema: &Schema, type_name: Option<String>) -> String {
+    let mut s = String::new();
 
-            match &query_type.name {
+    match type_name.and_then(|name| schema.get_type(&name)) {
+        Some(typ) => {
+            match &typ.name {
                 Some(name) => s.push_str(&to_header(1, &name)),
                 None => {}
             }
 
-            match &query_type.description {
+            match &typ.description {
                 Some(description) => s.push_str(&to_description(&description)),
                 None => {}
             }
 
-            match &query_type.fields {
+            match &typ.fields {
                 Some(fields) => {
                     for field in fields.iter() {
                         s.push_str(&field_to_markdown(field));
@@ -77,95 +80,11 @@ fn queries_to_markdown(schema: &Schema) -> String {
                 }
                 None => {}
             }
-
-            s
         }
-        None => "".to_string(),
+        None => {}
     }
-}
 
-fn mutations_to_markdown(schema: &Schema) -> String {
-    match schema
-        .get_mutation_name()
-        .and_then(|mutation_name| schema.get_type(&mutation_name))
-    {
-        Some(mutation_type) => {
-            let mut s = String::new();
-
-            match &mutation_type.name {
-                Some(name) => s.push_str(&to_header(1, &name)),
-                None => {}
-            }
-
-            match &mutation_type.description {
-                Some(description) => s.push_str(&to_description(&description)),
-                None => {}
-            }
-
-            match &mutation_type.inputs {
-                Some(inputs) => {
-                    for input in inputs {
-                        s.push_str(&input_to_markdown(input));
-                    }
-                }
-                None => {}
-            }
-
-            match &mutation_type.fields {
-                Some(fields) => {
-                    for field in fields.iter() {
-                        s.push_str(&field_to_markdown(field));
-                    }
-                }
-                None => {}
-            }
-
-            s
-        }
-        None => "".to_string(),
-    }
-}
-
-fn subscriptions_to_markdown(schema: &Schema) -> String {
-    match schema
-        .get_subscription_name()
-        .and_then(|subscription_name| schema.get_type(&subscription_name))
-    {
-        Some(subscription_type) => {
-            let mut s = String::new();
-
-            match &subscription_type.name {
-                Some(name) => s.push_str(&to_header(1, &name)),
-                None => {}
-            }
-
-            match &subscription_type.description {
-                Some(description) => s.push_str(&to_description(&description)),
-                None => {}
-            }
-
-            match &subscription_type.inputs {
-                Some(inputs) => {
-                    for input in inputs {
-                        s.push_str(&input_to_markdown(input));
-                    }
-                }
-                None => {}
-            }
-
-            match &subscription_type.fields {
-                Some(fields) => {
-                    for field in fields.iter() {
-                        s.push_str(&field_to_markdown(field));
-                    }
-                }
-                None => {}
-            }
-
-            s
-        }
-        None => "".to_string(),
-    }
+    s
 }
 
 fn types_to_markdown(schema: &Schema, title: &str, kind: &str) -> String {
@@ -361,22 +280,6 @@ fn enum_to_markdown_table_row(enm: &Enum) -> String {
     to_table_row(&vec![&name, &description, &dr])
 }
 
-fn input_to_markdown(input: &Input) -> String {
-    let mut s = String::new();
-
-    match &input.name {
-        Some(name) => s.push_str(&to_header(1, &name)),
-        None => {}
-    }
-
-    match &input.description {
-        Some(description) => s.push_str(&to_description(&description)),
-        None => {}
-    }
-
-    s
-}
-
 fn field_to_markdown(field: &Field) -> String {
     let mut s = String::new();
 
@@ -457,7 +360,7 @@ mod tests {
     }
 
     #[test]
-    fn test_queries_to_markdown_should_return_empty_when_none() {
+    fn test_schema_type_to_markdown_for_query_should_return_empty_when_none() {
         let schema = &Schema {
             query_type: None,
             mutation_type: None,
@@ -465,11 +368,14 @@ mod tests {
             types: None,
             directives: None,
         };
-        assert_eq!("".to_string(), queries_to_markdown(schema));
+        assert_eq!(
+            "".to_string(),
+            schema_type_to_markdown(schema, schema.get_query_name())
+        );
     }
 
     #[test]
-    fn test_queries_to_markdown_should_return_empty_when_some_and_no_members() {
+    fn test_schema_type_to_markdown_for_query_should_return_empty_when_some_and_no_members() {
         let schema = &Schema {
             query_type: Some(Type {
                 name: None,
@@ -486,11 +392,14 @@ mod tests {
             types: None,
             directives: None,
         };
-        assert_eq!("".to_string(), queries_to_markdown(schema));
+        assert_eq!(
+            "".to_string(),
+            schema_type_to_markdown(schema, schema.get_query_name())
+        );
     }
 
     #[test]
-    fn test_queries_to_markdown_should_return_markdown_when_some() {
+    fn test_schema_type_to_markdown_for_query_should_return_markdown_when_some() {
         let schema = &Schema {
             query_type: Some(Type {
                 name: Some("Query".to_string()),
@@ -534,12 +443,12 @@ mod tests {
 
 "#
             .to_string(),
-            queries_to_markdown(schema)
+            schema_type_to_markdown(schema, schema.get_query_name())
         );
     }
 
     #[test]
-    fn test_mutations_to_markdown_should_return_empty_when_none() {
+    fn test_schema_type_to_markdown_for_mutation_should_return_empty_when_none() {
         let schema = &Schema {
             query_type: None,
             mutation_type: None,
@@ -547,11 +456,14 @@ mod tests {
             types: None,
             directives: None,
         };
-        assert_eq!("".to_string(), mutations_to_markdown(schema));
+        assert_eq!(
+            "".to_string(),
+            schema_type_to_markdown(schema, schema.get_mutation_name())
+        );
     }
 
     #[test]
-    fn test_mutations_to_markdown_should_return_empty_when_some_and_no_members() {
+    fn test_schema_type_to_markdown_for_mutation_should_return_empty_when_some_and_no_members() {
         let schema = &Schema {
             query_type: None,
             mutation_type: Some(Type {
@@ -568,11 +480,14 @@ mod tests {
             types: None,
             directives: None,
         };
-        assert_eq!("".to_string(), mutations_to_markdown(schema));
+        assert_eq!(
+            "".to_string(),
+            schema_type_to_markdown(schema, schema.get_mutation_name())
+        );
     }
 
     #[test]
-    fn test_mutations_to_markdown_should_return_markdown_when_some() {
+    fn test_schema_type_to_markdown_for_mutation_should_return_markdown_when_some() {
         let schema = &Schema {
             query_type: None,
             mutation_type: Some(Type {
@@ -616,12 +531,12 @@ mod tests {
 
 "#
             .to_string(),
-            mutations_to_markdown(schema)
+            schema_type_to_markdown(schema, schema.get_mutation_name())
         );
     }
 
     #[test]
-    fn test_subscriptions_to_markdown_should_return_empty_when_none() {
+    fn test_schema_type_to_markdown_for_subscription_should_return_empty_when_none() {
         let schema = &Schema {
             query_type: None,
             mutation_type: None,
@@ -629,11 +544,15 @@ mod tests {
             types: None,
             directives: None,
         };
-        assert_eq!("".to_string(), subscriptions_to_markdown(schema));
+        assert_eq!(
+            "".to_string(),
+            schema_type_to_markdown(schema, schema.get_subscription_name())
+        );
     }
 
     #[test]
-    fn test_subscriptions_to_markdown_should_return_empty_when_some_and_no_members() {
+    fn test_schema_type_to_markdown_for_subscription_should_return_empty_when_some_and_no_members()
+    {
         let schema = &Schema {
             query_type: None,
             mutation_type: None,
@@ -650,11 +569,14 @@ mod tests {
             types: None,
             directives: None,
         };
-        assert_eq!("".to_string(), subscriptions_to_markdown(schema));
+        assert_eq!(
+            "".to_string(),
+            schema_type_to_markdown(schema, schema.get_subscription_name())
+        );
     }
 
     #[test]
-    fn test_subscriptions_to_markdown_should_return_markdown_when_some() {
+    fn test_schema_type_to_markdown_for_subscription_should_return_markdown_when_some() {
         let schema = &Schema {
             query_type: None,
             mutation_type: None,
@@ -698,7 +620,7 @@ mod tests {
 
 "#
             .to_string(),
-            subscriptions_to_markdown(schema)
+            schema_type_to_markdown(schema, schema.get_subscription_name())
         );
     }
 
@@ -735,25 +657,6 @@ mod tests {
 "#
             .to_string(),
             type_to_markdown(typ)
-        );
-    }
-
-    #[test]
-    fn test_input_to_markdown_should_return_markdown() {
-        let input = &Input {
-            name: Some("PlayerInput".to_string()),
-            description: Some("Input for defining a player".to_string()),
-            input_type: None,
-            default_value: None,
-        };
-        assert_eq!(
-            r#"# PlayerInput
-
-> Input for defining a player
-
-"#
-            .to_string(),
-            input_to_markdown(input)
         );
     }
 }
