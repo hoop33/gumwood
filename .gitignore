@@ -127,3 +127,6 @@ fabric.properties
 
 # Tarpaulin Code Coverage
 tarpaulin-report.html
+
+# Markdown output directory
+output
