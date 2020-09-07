@@ -798,7 +798,7 @@ mod tests {
     }
 
     #[test]
-    fn test_typeref_to_string_should_return_empty_when_none() {
+    fn test_typeref_decorated_name_should_return_empty_when_none() {
         let tr = TypeRef {
             name: None,
             kind: None,
@@ -808,7 +808,7 @@ mod tests {
     }
 
     #[test]
-    fn test_typeref_to_string_should_return_name_when_not_required() {
+    fn test_typeref_decorated_name_should_return_name_when_not_required() {
         let tr = TypeRef {
             name: Some("myName".to_string()),
             kind: None,
@@ -818,7 +818,7 @@ mod tests {
     }
 
     #[test]
-    fn test_typeref_to_string_should_return_name_with_exclamation_when_required() {
+    fn test_typeref_decorated_name_should_return_name_with_exclamation_when_required() {
         let tr = TypeRef {
             name: Some("myName".to_string()),
             kind: Some("NON_NULL".to_string()),
@@ -828,7 +828,7 @@ mod tests {
     }
 
     #[test]
-    fn test_typeref_to_string_should_return_name_with_brackets_when_list() {
+    fn test_typeref_decorated_name_should_return_name_with_brackets_when_list() {
         let tr = TypeRef {
             name: Some("myName".to_string()),
             kind: Some("LIST".to_string()),
@@ -838,7 +838,7 @@ mod tests {
     }
 
     #[test]
-    fn test_typeref_to_string_should_return_name_with_brackets_and_exclamation_when_list_and_required(
+    fn test_typeref_decorated_name_should_return_name_with_brackets_and_exclamation_when_list_and_required(
     ) {
         let tr = TypeRef {
             name: None,
@@ -853,7 +853,7 @@ mod tests {
     }
 
     #[test]
-    fn test_typeref_to_string_should_return_name_with_brackets_and_exclamation_outside_when_list_and_required(
+    fn test_typeref_decorated_name_should_return_name_with_brackets_and_exclamation_outside_when_list_and_required(
     ) {
         let tr = TypeRef {
             name: None,
@@ -868,7 +868,7 @@ mod tests {
     }
 
     #[test]
-    fn test_typeref_to_string_should_return_name_with_brackets_and_two_exclamation_when_list_and_required(
+    fn test_typeref_decorated_name_should_return_name_with_brackets_and_two_exclamation_when_list_and_required(
     ) {
         let tr = TypeRef {
             name: None,
@@ -887,7 +887,7 @@ mod tests {
     }
 
     #[test]
-    fn test_typeref_to_string_should_return_name_with_brackets_when_not_scalar() {
+    fn test_typeref_decorated_name_should_return_name_with_brackets_when_not_scalar() {
         let tr = TypeRef {
             name: None,
             kind: Some("LIST".to_string()),
