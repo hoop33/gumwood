@@ -23,12 +23,12 @@ pub fn to_notice(notice: &str) -> String {
     format!("_{}_\n", notice)
 }
 
-pub fn to_table_row(items: &[&str]) -> String {
+pub fn to_table_row(items: &Vec<String>) -> String {
     format!("| {} |\n", items.join(" | "))
 }
 
 pub fn to_table_separator(num: usize) -> String {
-    to_table_row(&vec!["---"; num])
+    to_table_row(&vec!["---".to_string(); num])
 }
 
 #[cfg(test)]
@@ -72,7 +72,10 @@ mod tests {
 
     #[test]
     fn test_to_table_row_should_create_row_when_not_empty() {
-        assert_eq!("| a | b | c |\n", to_table_row(&vec!["a", "b", "c"]));
+        assert_eq!(
+            "| a | b | c |\n",
+            to_table_row(&vec!["a".to_string(), "b".to_string(), "c".to_string()])
+        );
     }
 
     #[test]

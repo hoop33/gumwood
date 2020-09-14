@@ -26,6 +26,17 @@ impl fmt::Display for SchemaError {
 
 impl Error for SchemaError {}
 
+pub trait TableItem {
+    fn table_fields(&self) -> Vec<String>;
+}
+
+fn to_safe_string(opt_s: &Option<String>) -> String {
+    match opt_s {
+        Some(s) => s.trim().replace("\n", ""),
+        None => "".to_string(),
+    }
+}
+
 #[derive(Debug, Deserialize, Serialize)]
 pub struct Type {
     pub name: Option<String>,
@@ -54,6 +65,20 @@ pub struct Field {
     pub deprecation_reason: Option<String>,
 }
 
+impl TableItem for Field {
+    fn table_fields(&self) -> Vec<String> {
+        let type_name = match self.field_type.as_ref() {
+            Some(typ) => typ.decorated_name(),
+            None => "".to_string(),
+        };
+        vec![
+            to_safe_string(&self.name),
+            type_name,
+            to_safe_string(&self.description),
+        ]
+    }
+}
+
 #[derive(Clone, Debug, Deserialize, Eq, Ord, PartialEq, PartialOrd, Serialize)]
 pub struct Input {
     pub name: Option<String>,
@@ -64,6 +89,20 @@ pub struct Input {
     pub default_value: Option<String>,
 }
 
+impl TableItem for Input {
+    fn table_fields(&self) -> Vec<String> {
+        let type_name = match self.input_type.as_ref() {
+            Some(typ) => typ.decorated_name(),
+            None => "".to_string(),
+        };
+        vec![
+            to_safe_string(&self.name),
+            type_name,
+            to_safe_string(&self.description),
+            to_safe_string(&self.default_value),
+        ]
+    }
+}
 #[derive(Clone, Debug, Deserialize, Eq, Ord, PartialEq, PartialOrd, Serialize)]
 pub struct Enum {
     pub name: Option<String>,
@@ -72,6 +111,26 @@ pub struct Enum {
     pub is_deprecated: Option<bool>,
     #[serde(alias = "deprecationReason")]
     pub deprecation_reason: Option<String>,
+}
+
+impl TableItem for Enum {
+    fn table_fields(&self) -> Vec<String> {
+        let is_deprecated = match &self.is_deprecated {
+            Some(is_deprecated) => *is_deprecated,
+            None => false,
+        };
+        let deprecation_reason = to_safe_string(&self.deprecation_reason);
+        let dr = if is_deprecated {
+            deprecation_reason
+        } else {
+            "no".to_string()
+        };
+        vec![
+            to_safe_string(&self.name),
+            to_safe_string(&self.description),
+            dr.to_string(),
+        ]
+    }
 }
 
 #[derive(Clone, Debug, Deserialize, Eq, Ord, PartialEq, PartialOrd, Serialize)]

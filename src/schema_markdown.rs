@@ -1,5 +1,5 @@
 use super::markdown::*;
-use super::schema::{Enum, Field, Input, Schema, Type};
+use super::schema::{Field, Schema, TableItem, Type};
 use std::collections::HashMap;
 use std::error::Error;
 
@@ -120,7 +120,14 @@ fn type_to_markdown(typ: &Type) -> String {
             s.push_str(&to_header(3, "Fields"));
             let mut sorted = fields.to_vec();
             sorted.sort_by(|a, b| a.name.cmp(&b.name));
-            s.push_str(&fields_to_markdown_table(&sorted));
+            s.push_str(&to_markdown_table(
+                vec![
+                    "Name".to_string(),
+                    "Type".to_string(),
+                    "Description".to_string(),
+                ],
+                &sorted,
+            ));
         }
         None => {}
     }
@@ -130,7 +137,15 @@ fn type_to_markdown(typ: &Type) -> String {
             s.push_str(&to_header(3, "Inputs"));
             let mut sorted = inputs.to_vec();
             sorted.sort_by(|a, b| a.name.cmp(&b.name));
-            s.push_str(&inputs_to_markdown_table(&sorted));
+            s.push_str(&to_markdown_table(
+                vec![
+                    "Name".to_string(),
+                    "Type".to_string(),
+                    "Description".to_string(),
+                    "Default Value".to_string(),
+                ],
+                &sorted,
+            ));
         }
         None => {}
     }
@@ -140,7 +155,14 @@ fn type_to_markdown(typ: &Type) -> String {
             s.push_str(&to_header(3, "Values"));
             let mut sorted = enums.to_vec();
             sorted.sort_by(|a, b| a.name.cmp(&b.name));
-            s.push_str(&enums_to_markdown_table(&sorted));
+            s.push_str(&to_markdown_table(
+                vec![
+                    "Name".to_string(),
+                    "Description".to_string(),
+                    "Deprecated".to_string(),
+                ],
+                &sorted,
+            ));
         }
         None => {}
     }
@@ -164,117 +186,16 @@ fn type_to_markdown(typ: &Type) -> String {
     s
 }
 
-fn fields_to_markdown_table(fields: &[Field]) -> String {
+fn to_markdown_table(headers: Vec<String>, items: &Vec<impl TableItem>) -> String {
     let mut s = String::new();
-
-    let headers = vec!["Name", "Type", "Description"];
     s.push_str(&to_table_row(&headers));
     s.push_str(&to_table_separator(headers.len()));
 
-    for field in fields.iter() {
-        s.push_str(&field_to_markdown_table_row(field));
+    for item in items.iter() {
+        s.push_str(&to_table_row(&item.table_fields()));
     }
-
     s.push_str("\n");
-
     s
-}
-
-fn inputs_to_markdown_table(inputs: &[Input]) -> String {
-    let mut s = String::new();
-
-    let headers = vec!["Name", "Type", "Description", "Default Value"];
-    s.push_str(&to_table_row(&headers));
-    s.push_str(&to_table_separator(headers.len()));
-
-    for input in inputs.iter() {
-        s.push_str(&input_to_markdown_table_row(input));
-    }
-
-    s.push_str("\n");
-
-    s
-}
-
-fn enums_to_markdown_table(enums: &[Enum]) -> String {
-    let mut s = String::new();
-
-    let headers = vec!["Name", "Description", "Deprecated?"];
-    s.push_str(&to_table_row(&headers));
-    s.push_str(&to_table_separator(headers.len()));
-
-    for enm in enums.iter() {
-        s.push_str(&enum_to_markdown_table_row(enm));
-    }
-
-    s.push_str("\n");
-
-    s
-}
-
-fn field_to_markdown_table_row(field: &Field) -> String {
-    let name = match &field.name {
-        Some(name) => name.trim(),
-        None => "(unknown)",
-    };
-    let type_name = match field.field_type.as_ref() {
-        Some(typ) => typ.decorated_name(),
-        None => "".to_string(),
-    };
-    let description = match &field.description {
-        Some(description) => description.trim().replace("\n", ""),
-        None => "".to_string(),
-    };
-
-    to_table_row(&[&name, &type_name, &description])
-}
-
-fn input_to_markdown_table_row(input: &Input) -> String {
-    let name = match &input.name {
-        Some(name) => name.trim(),
-        None => "(unknown)",
-    };
-    let type_name = match input.input_type.as_ref() {
-        Some(typ) => typ.decorated_name(),
-        None => "".to_string(),
-    };
-    let description = match &input.description {
-        Some(description) => description.trim().replace("\n", ""),
-        None => "".to_string(),
-    };
-    let default_value = match &input.default_value {
-        Some(default_value) => default_value.trim().replace("\n", ""),
-        None => "".to_string(),
-    };
-
-    to_table_row(&[&name, &type_name, &description, &default_value])
-}
-
-fn enum_to_markdown_table_row(enm: &Enum) -> String {
-    let name = match &enm.name {
-        Some(name) => name.trim(),
-        None => "(unknown)",
-    };
-    let description = match &enm.description {
-        Some(description) => description.trim().replace("\n", ""),
-        None => "".to_string(),
-    };
-    let is_deprecated = match &enm.is_deprecated {
-        Some(is_deprecated) => *is_deprecated,
-        None => false,
-    };
-    let deprecation_reason = match &enm.deprecation_reason {
-        Some(deprecation_reason) => deprecation_reason,
-        None => "",
-    };
-
-    let dr = if is_deprecated {
-        deprecation_reason
-    } else {
-        "no"
-    };
-
-    to_table_row(&[&name, &description, &dr])
 }
 
 fn field_to_markdown(field: &Field) -> String {
@@ -310,7 +231,15 @@ fn field_to_markdown(field: &Field) -> String {
                 s.push_str(&to_header(3, "Arguments"));
                 let mut sorted = args.to_vec();
                 sorted.sort_by(|a, b| a.name.cmp(&b.name));
-                s.push_str(&inputs_to_markdown_table(&sorted));
+                s.push_str(&to_markdown_table(
+                    vec![
+                        "Name".to_string(),
+                        "Type".to_string(),
+                        "Description".to_string(),
+                        "Default Value".to_string(),
+                    ],
+                    &sorted,
+                ));
             }
         }
         None => {}
