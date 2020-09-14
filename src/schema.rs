@@ -196,17 +196,15 @@ impl Schema {
     }
 
     pub fn get_query_name(&self) -> Option<String> {
-        self.query_type.as_ref().and_then(|typ| typ.name.clone())
+        Schema::get_type_name(&self.query_type)
     }
 
     pub fn get_mutation_name(&self) -> Option<String> {
-        self.mutation_type.as_ref().and_then(|typ| typ.name.clone())
+        Schema::get_type_name(&self.mutation_type)
     }
 
     pub fn get_subscription_name(&self) -> Option<String> {
-        self.subscription_type
-            .as_ref()
-            .and_then(|typ| typ.name.clone())
+        Schema::get_type_name(&self.subscription_type)
     }
 
     pub fn get_type(&self, name: &str) -> Option<&Type> {
@@ -248,6 +246,10 @@ impl Schema {
         }
 
         vec
+    }
+
+    fn get_type_name(typ: &Option<Type>) -> Option<String> {
+        typ.as_ref().and_then(|typ| typ.name.clone())
     }
 }
 
