@@ -128,7 +128,7 @@ impl TableItem for Enum {
         vec![
             to_safe_string(&self.name),
             to_safe_string(&self.description),
-            dr.to_string(),
+            dr,
         ]
     }
 }

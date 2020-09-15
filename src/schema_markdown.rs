@@ -186,7 +186,7 @@ fn type_to_markdown(typ: &Type) -> String {
     s
 }
 
-fn to_markdown_table(headers: Vec<String>, items: &Vec<impl TableItem>) -> String {
+fn to_markdown_table(headers: Vec<String>, items: &[impl TableItem]) -> String {
     let mut s = String::new();
     s.push_str(&to_table_row(&headers));
     s.push_str(&to_table_separator(headers.len()));

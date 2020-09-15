@@ -23,7 +23,7 @@ pub fn to_notice(notice: &str) -> String {
     format!("_{}_\n", notice)
 }
 
-pub fn to_table_row(items: &Vec<String>) -> String {
+pub fn to_table_row(items: &[String]) -> String {
     format!("| {} |\n", items.join(" | "))
 }
 
