@@ -417,7 +417,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_should_pass_when_empty_schema() {
+    fn from_str_should_pass_when_empty_schema() {
         let response = r#"{
             "data": {
                 "__schema": {
@@ -431,7 +431,7 @@ mod tests {
     }
 
     #[test]
-    fn test_should_fail_when_not_json() {
+    fn from_str_should_fail_when_not_json() {
         let response = "test";
         match Schema::from_str(response) {
             Ok(_) => assert!(false, "plain text should fail"),
@@ -440,7 +440,7 @@ mod tests {
     }
 
     #[test]
-    fn test_should_fail_when_no_data() {
+    fn from_str_should_fail_when_no_data() {
         let response = r#"{
         }"#;
         match Schema::from_str(&response) {
@@ -450,7 +450,7 @@ mod tests {
     }
 
     #[test]
-    fn test_should_fail_when_no_schema() {
+    fn from_str_should_fail_when_no_schema() {
         let response = r#"{
             "data": {
             }
@@ -462,7 +462,7 @@ mod tests {
     }
 
     #[test]
-    fn test_should_have_no_query_type_when_none() -> Result<(), Box<dyn Error>> {
+    fn from_str_should_have_no_query_type_when_none() -> Result<(), Box<dyn Error>> {
         let response = r#"{
             "data": {
                 "__schema": {
@@ -475,7 +475,7 @@ mod tests {
     }
 
     #[test]
-    fn test_should_have_query_type_when_some() -> Result<(), Box<dyn Error>> {
+    fn from_str_should_have_query_type_when_some() -> Result<(), Box<dyn Error>> {
         let response = r#"{
             "data": {
                 "__schema": {
@@ -490,7 +490,7 @@ mod tests {
     }
 
     #[test]
-    fn test_should_have_query_type_name_when_present() -> Result<(), Box<dyn Error>> {
+    fn from_str_should_have_query_type_name_when_present() -> Result<(), Box<dyn Error>> {
         let response = r#"{
             "data": {
                 "__schema": {
@@ -506,7 +506,7 @@ mod tests {
     }
 
     #[test]
-    fn test_should_return_some_query_name_when_present() -> Result<(), Box<dyn Error>> {
+    fn from_str_should_return_some_query_name_when_present() -> Result<(), Box<dyn Error>> {
         let response = r#"{
             "data": {
                 "__schema": {
@@ -523,7 +523,7 @@ mod tests {
     }
 
     #[test]
-    fn test_should_return_none_query_name_when_absent() -> Result<(), Box<dyn Error>> {
+    fn from_str_should_return_none_query_name_when_absent() -> Result<(), Box<dyn Error>> {
         let response = r#"{
             "data": {
                 "__schema": {
@@ -536,7 +536,7 @@ mod tests {
     }
 
     #[test]
-    fn test_should_return_none_query_name_when_name_absent() -> Result<(), Box<dyn Error>> {
+    fn from_str_should_return_none_query_name_when_name_absent() -> Result<(), Box<dyn Error>> {
         let response = r#"{
             "data": {
                 "__schema": {
@@ -551,7 +551,7 @@ mod tests {
     }
 
     #[test]
-    fn test_should_have_no_mutation_type_when_none() -> Result<(), Box<dyn Error>> {
+    fn from_str_should_have_no_mutation_type_when_none() -> Result<(), Box<dyn Error>> {
         let response = r#"{
             "data": {
                 "__schema": {
@@ -564,7 +564,7 @@ mod tests {
     }
 
     #[test]
-    fn test_should_have_mutation_type_when_some() -> Result<(), Box<dyn Error>> {
+    fn from_str_should_have_mutation_type_when_some() -> Result<(), Box<dyn Error>> {
         let response = r#"{
             "data": {
                 "__schema": {
@@ -579,7 +579,7 @@ mod tests {
     }
 
     #[test]
-    fn test_should_have_mutation_type_name_when_present() -> Result<(), Box<dyn Error>> {
+    fn from_str_should_have_mutation_type_name_when_present() -> Result<(), Box<dyn Error>> {
         let response = r#"{
             "data": {
                 "__schema": {
@@ -595,7 +595,7 @@ mod tests {
     }
 
     #[test]
-    fn test_should_return_some_mutation_name_when_present() -> Result<(), Box<dyn Error>> {
+    fn from_str_should_return_some_mutation_name_when_present() -> Result<(), Box<dyn Error>> {
         let response = r#"{
             "data": {
                 "__schema": {
@@ -612,7 +612,7 @@ mod tests {
     }
 
     #[test]
-    fn test_should_return_none_mutation_name_when_absent() -> Result<(), Box<dyn Error>> {
+    fn from_str_should_return_none_mutation_name_when_absent() -> Result<(), Box<dyn Error>> {
         let response = r#"{
             "data": {
                 "__schema": {
@@ -625,7 +625,7 @@ mod tests {
     }
 
     #[test]
-    fn test_should_return_none_mutation_name_when_name_absent() -> Result<(), Box<dyn Error>> {
+    fn from_str_should_return_none_mutation_name_when_name_absent() -> Result<(), Box<dyn Error>> {
         let response = r#"{
             "data": {
                 "__schema": {
@@ -640,7 +640,7 @@ mod tests {
     }
 
     #[test]
-    fn test_should_have_no_subscription_type_when_none() -> Result<(), Box<dyn Error>> {
+    fn from_str_should_have_no_subscription_type_when_none() -> Result<(), Box<dyn Error>> {
         let response = r#"{
             "data": {
                 "__schema": {
@@ -653,7 +653,7 @@ mod tests {
     }
 
     #[test]
-    fn test_should_have_subscription_type_when_some() -> Result<(), Box<dyn Error>> {
+    fn from_str_should_have_subscription_type_when_some() -> Result<(), Box<dyn Error>> {
         let response = r#"{
             "data": {
                 "__schema": {
@@ -668,7 +668,7 @@ mod tests {
     }
 
     #[test]
-    fn test_should_have_subscription_type_name_when_present() -> Result<(), Box<dyn Error>> {
+    fn from_str_should_have_subscription_type_name_when_present() -> Result<(), Box<dyn Error>> {
         let response = r#"{
             "data": {
                 "__schema": {
@@ -687,7 +687,7 @@ mod tests {
     }
 
     #[test]
-    fn test_should_return_some_subscription_name_when_present() -> Result<(), Box<dyn Error>> {
+    fn from_str_should_return_some_subscription_name_when_present() -> Result<(), Box<dyn Error>> {
         let response = r#"{
             "data": {
                 "__schema": {
@@ -704,7 +704,7 @@ mod tests {
     }
 
     #[test]
-    fn test_should_return_none_subscription_name_when_absent() -> Result<(), Box<dyn Error>> {
+    fn from_str_should_return_none_subscription_name_when_absent() -> Result<(), Box<dyn Error>> {
         let response = r#"{
             "data": {
                 "__schema": {
@@ -717,7 +717,8 @@ mod tests {
     }
 
     #[test]
-    fn test_should_return_none_subscription_name_when_name_absent() -> Result<(), Box<dyn Error>> {
+    fn from_str_should_return_none_subscription_name_when_name_absent() -> Result<(), Box<dyn Error>>
+    {
         let response = r#"{
             "data": {
                 "__schema": {
@@ -732,7 +733,7 @@ mod tests {
     }
 
     #[test]
-    fn test_should_return_none_when_no_types() -> Result<(), Box<dyn Error>> {
+    fn from_str_should_return_none_when_no_types() -> Result<(), Box<dyn Error>> {
         let response = r#"{
         "data": {
             "__schema": {
@@ -745,7 +746,7 @@ mod tests {
     }
 
     #[test]
-    fn test_should_return_none_when_type_has_no_name() -> Result<(), Box<dyn Error>> {
+    fn from_str_should_return_none_when_type_has_no_name() -> Result<(), Box<dyn Error>> {
         let response = r#"{
         "data": {
             "__schema": {
@@ -763,7 +764,7 @@ mod tests {
     }
 
     #[test]
-    fn test_should_return_none_when_no_type_of_name() -> Result<(), Box<dyn Error>> {
+    fn from_str_should_return_none_when_no_type_of_name() -> Result<(), Box<dyn Error>> {
         let response = r#"{
         "data": {
             "__schema": {
@@ -781,7 +782,7 @@ mod tests {
     }
 
     #[test]
-    fn test_should_return_some_when_type_of_name() -> Result<(), Box<dyn Error>> {
+    fn from_str_should_return_some_when_type_of_name() -> Result<(), Box<dyn Error>> {
         let response = r#"{
         "data": {
             "__schema": {
@@ -799,7 +800,7 @@ mod tests {
     }
 
     #[test]
-    fn test_typeref_is_required_should_return_false_when_kind_is_none() {
+    fn typeref_is_required_should_return_false_when_kind_is_none() {
         let tr = TypeRef {
             name: None,
             kind: None,
@@ -809,7 +810,7 @@ mod tests {
     }
 
     #[test]
-    fn test_typeref_is_required_should_return_false_when_kind_is_not_non_null() {
+    fn typeref_is_required_should_return_false_when_kind_is_not_non_null() {
         let tr = TypeRef {
             name: None,
             kind: Some("foo".to_string()),
@@ -819,7 +820,7 @@ mod tests {
     }
 
     #[test]
-    fn test_typeref_is_required_should_return_true_when_kind_is_non_null() {
+    fn typeref_is_required_should_return_true_when_kind_is_non_null() {
         let tr = TypeRef {
             name: None,
             kind: Some("NON_NULL".to_string()),
@@ -829,7 +830,7 @@ mod tests {
     }
 
     #[test]
-    fn test_typeref_is_list_should_return_false_when_kind_is_none() {
+    fn typeref_is_list_should_return_false_when_kind_is_none() {
         let tr = TypeRef {
             name: None,
             kind: None,
@@ -839,7 +840,7 @@ mod tests {
     }
 
     #[test]
-    fn test_typeref_is_list_should_return_false_when_kind_is_not_non_null() {
+    fn typeref_is_list_should_return_false_when_kind_is_not_non_null() {
         let tr = TypeRef {
             name: None,
             kind: Some("foo".to_string()),
@@ -849,7 +850,7 @@ mod tests {
     }
 
     #[test]
-    fn test_typeref_is_list_should_return_true_when_kind_is_non_null() {
+    fn typeref_is_list_should_return_true_when_kind_is_non_null() {
         let tr = TypeRef {
             name: None,
             kind: Some("LIST".to_string()),
@@ -859,7 +860,7 @@ mod tests {
     }
 
     #[test]
-    fn test_typeref_decorated_name_should_return_empty_when_none() {
+    fn typeref_decorated_name_should_return_empty_when_none() {
         let tr = TypeRef {
             name: None,
             kind: None,
@@ -869,7 +870,7 @@ mod tests {
     }
 
     #[test]
-    fn test_typeref_decorated_name_should_return_name_when_not_required() {
+    fn typeref_decorated_name_should_return_name_when_not_required() {
         let tr = TypeRef {
             name: Some("myName".to_string()),
             kind: None,
@@ -879,7 +880,7 @@ mod tests {
     }
 
     #[test]
-    fn test_typeref_decorated_name_should_return_name_with_exclamation_when_required() {
+    fn typeref_decorated_name_should_return_name_with_exclamation_when_required() {
         let tr = TypeRef {
             name: Some("myName".to_string()),
             kind: Some("NON_NULL".to_string()),
@@ -889,7 +890,7 @@ mod tests {
     }
 
     #[test]
-    fn test_typeref_decorated_name_should_return_name_with_brackets_when_list() {
+    fn typeref_decorated_name_should_return_name_with_brackets_when_list() {
         let tr = TypeRef {
             name: Some("myName".to_string()),
             kind: Some("LIST".to_string()),
@@ -899,7 +900,7 @@ mod tests {
     }
 
     #[test]
-    fn test_typeref_decorated_name_should_return_name_with_brackets_and_exclamation_when_list_and_required(
+    fn typeref_decorated_name_should_return_name_with_brackets_and_exclamation_when_list_and_required(
     ) {
         let tr = TypeRef {
             name: None,
@@ -914,7 +915,7 @@ mod tests {
     }
 
     #[test]
-    fn test_typeref_decorated_name_should_return_name_with_brackets_and_exclamation_outside_when_list_and_required(
+    fn typeref_decorated_name_should_return_name_with_brackets_and_exclamation_outside_when_list_and_required(
     ) {
         let tr = TypeRef {
             name: None,
@@ -929,7 +930,7 @@ mod tests {
     }
 
     #[test]
-    fn test_typeref_decorated_name_should_return_name_with_brackets_and_two_exclamation_when_list_and_required(
+    fn typeref_decorated_name_should_return_name_with_brackets_and_two_exclamation_when_list_and_required(
     ) {
         let tr = TypeRef {
             name: None,
@@ -948,7 +949,7 @@ mod tests {
     }
 
     #[test]
-    fn test_typeref_decorated_name_should_return_name_with_brackets_when_not_scalar() {
+    fn typeref_decorated_name_should_return_name_with_brackets_when_not_scalar() {
         let tr = TypeRef {
             name: None,
             kind: Some("LIST".to_string()),
@@ -962,7 +963,7 @@ mod tests {
     }
 
     #[test]
-    fn test_get_types_of_kind_should_return_only_types_of_kind() {
+    fn get_types_of_kind_should_return_only_types_of_kind() {
         let response = r#"{
         "data": {
             "__schema": {

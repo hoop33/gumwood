@@ -110,7 +110,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_it_should_return_ok_when_url_specified() -> Result<(), String> {
+    fn it_should_return_ok_when_url_specified() -> Result<(), String> {
         let vec = vec![
             "gumroad",
             "--url",
@@ -137,7 +137,7 @@ mod tests {
     }
 
     #[test]
-    fn test_it_should_return_ok_when_json_specified() -> Result<(), String> {
+    fn it_should_return_ok_when_json_specified() -> Result<(), String> {
         let vec = vec![
             "gumroad",
             "--json",
@@ -164,7 +164,7 @@ mod tests {
     }
 
     #[test]
-    fn test_it_should_return_ok_when_schema_specified() -> Result<(), String> {
+    fn it_should_return_ok_when_schema_specified() -> Result<(), String> {
         let vec = vec![
             "gumroad",
             "--schema",
@@ -191,7 +191,7 @@ mod tests {
     }
 
     #[test]
-    fn test_multiple_false() -> Result<(), String> {
+    fn it_should_set_multiple_to_false_when_not_specified() -> Result<(), String> {
         let vec = vec![
             "gumroad",
             "--url",
@@ -205,7 +205,7 @@ mod tests {
     }
 
     #[test]
-    fn test_get_schema_should_return_error_when_none_specified() {
+    fn get_schema_should_return_error_when_none_specified() {
         let vec = vec!["gumroad", "--out-dir", "./out"];
         let args = Cli::from_iter(vec.iter());
         assert!(get_schema(&args).is_err());

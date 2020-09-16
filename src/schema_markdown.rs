@@ -253,17 +253,17 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_with_front_matter_should_return_ok_when_none() {
+    fn with_front_matter_should_return_ok_when_none() {
         assert!(Markdown::with_front_matter(None).is_ok());
     }
 
     #[test]
-    fn test_with_front_matter_should_return_ok_when_some() {
+    fn with_front_matter_should_return_ok_when_some() {
         assert!(Markdown::with_front_matter(Some("fm:foo".to_string())).is_ok());
     }
 
     #[test]
-    fn test_generate_from_schema_should_return_empty_when_empty_schema() {
+    fn generate_from_schema_should_return_empty_when_empty_schema() {
         let markdown = Markdown::with_front_matter(None).unwrap();
         let schema = &Schema {
             query_type: None,
@@ -286,7 +286,7 @@ mod tests {
     }
 
     #[test]
-    fn test_schema_type_to_markdown_for_query_should_return_empty_when_none() {
+    fn schema_type_to_markdown_for_query_should_return_empty_when_none() {
         let schema = &Schema {
             query_type: None,
             mutation_type: None,
@@ -301,7 +301,7 @@ mod tests {
     }
 
     #[test]
-    fn test_schema_type_to_markdown_for_query_should_return_empty_when_some_and_no_members() {
+    fn schema_type_to_markdown_for_query_should_return_empty_when_some_and_no_members() {
         let schema = &Schema {
             query_type: Some(Type {
                 name: None,
@@ -325,7 +325,7 @@ mod tests {
     }
 
     #[test]
-    fn test_schema_type_to_markdown_for_query_should_return_markdown_when_some() {
+    fn schema_type_to_markdown_for_query_should_return_markdown_when_some() {
         let schema = &Schema {
             query_type: Some(Type {
                 name: Some("Query".to_string()),
@@ -374,7 +374,7 @@ mod tests {
     }
 
     #[test]
-    fn test_schema_type_to_markdown_for_mutation_should_return_empty_when_none() {
+    fn schema_type_to_markdown_for_mutation_should_return_empty_when_none() {
         let schema = &Schema {
             query_type: None,
             mutation_type: None,
@@ -389,7 +389,7 @@ mod tests {
     }
 
     #[test]
-    fn test_schema_type_to_markdown_for_mutation_should_return_empty_when_some_and_no_members() {
+    fn schema_type_to_markdown_for_mutation_should_return_empty_when_some_and_no_members() {
         let schema = &Schema {
             query_type: None,
             mutation_type: Some(Type {
@@ -413,7 +413,7 @@ mod tests {
     }
 
     #[test]
-    fn test_schema_type_to_markdown_for_mutation_should_return_markdown_when_some() {
+    fn schema_type_to_markdown_for_mutation_should_return_markdown_when_some() {
         let schema = &Schema {
             query_type: None,
             mutation_type: Some(Type {
@@ -462,7 +462,7 @@ mod tests {
     }
 
     #[test]
-    fn test_schema_type_to_markdown_for_subscription_should_return_empty_when_none() {
+    fn schema_type_to_markdown_for_subscription_should_return_empty_when_none() {
         let schema = &Schema {
             query_type: None,
             mutation_type: None,
@@ -477,8 +477,7 @@ mod tests {
     }
 
     #[test]
-    fn test_schema_type_to_markdown_for_subscription_should_return_empty_when_some_and_no_members()
-    {
+    fn schema_type_to_markdown_for_subscription_should_return_empty_when_some_and_no_members() {
         let schema = &Schema {
             query_type: None,
             mutation_type: None,
@@ -502,7 +501,7 @@ mod tests {
     }
 
     #[test]
-    fn test_schema_type_to_markdown_for_subscription_should_return_markdown_when_some() {
+    fn schema_type_to_markdown_for_subscription_should_return_markdown_when_some() {
         let schema = &Schema {
             query_type: None,
             mutation_type: None,
@@ -551,7 +550,7 @@ mod tests {
     }
 
     #[test]
-    fn test_types_to_markdown_should_return_markdown() {
+    fn types_to_markdown_should_return_markdown() {
         let schema = &Schema {
             query_type: None,
             mutation_type: None,
@@ -606,7 +605,7 @@ mod tests {
     }
 
     #[test]
-    fn test_type_to_markdown_should_return_markdown() {
+    fn type_to_markdown_should_return_markdown() {
         let typ = &Type {
             name: Some("Player".to_string()),
             description: Some("This is a player".to_string()),
