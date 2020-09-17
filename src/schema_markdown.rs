@@ -170,11 +170,11 @@ fn type_to_markdown(typ: &Type) -> String {
     match &typ.possible_types {
         Some(possible_types) => {
             s.push_str(&to_header(3, "Implemented by"));
-            let mut names: Vec<&str> = possible_types
+            let mut names: Vec<String> = possible_types
                 .iter()
                 .map(|typ| match &typ.name {
-                    Some(name) => name,
-                    None => "",
+                    Some(name) => to_inline_code(name),
+                    None => "".to_string(),
                 })
                 .collect();
             names.sort();

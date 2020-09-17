@@ -22,7 +22,7 @@ pub fn to_label(label: &str, value: &str) -> String {
     format!("**{}:** {}\n\n", label, value)
 }
 
-pub fn to_list(items: &[&str]) -> String {
+pub fn to_list(items: &[String]) -> String {
     let list: String = items.iter().map(|item| format!("* {}\n", item)).collect();
     format!("{}\n", list)
 }
@@ -111,6 +111,9 @@ mod tests {
 
     #[test]
     fn to_list_should_return_list_when_not_empty() {
-        assert_eq!("* a\n* b\n* c\n\n", to_list(&vec!["a", "b", "c"]));
+        assert_eq!(
+            "* a\n* b\n* c\n\n",
+            to_list(&vec!["a".to_string(), "b".to_string(), "c".to_string()])
+        );
     }
 }
