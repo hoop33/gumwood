@@ -16,14 +16,14 @@ You specify a live GraphQL endpoint and whether you want the resulting markdown 
 
 Get help:
 
-```sh
+```
 $ gumwood --help
 gumwood 0.1.0
 Rob Warner <rwarner@grailbox.com>
 Convert a GraphQL schema to Markdown
 
 Specify the source of the schema using --json, --url, or --schema.
- If you don't specify a source, gumwood will read from stdin.
+ If you do not specify a source, gumwood will read from stdin.
  gumwood will write the markdown files to the current directory,
  unless you specify a different directory using --out-dir.
 
