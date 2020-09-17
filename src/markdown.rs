@@ -10,6 +10,14 @@ pub fn to_description(text: &str) -> String {
     format!("> {}\n\n", text)
 }
 
+pub fn to_inline_code(text: &str) -> String {
+    if text.len() == 0 {
+        "".to_string()
+    } else {
+        format!("`{}`", text)
+    }
+}
+
 pub fn to_label(label: &str, value: &str) -> String {
     format!("**{}:** {}\n\n", label, value)
 }
@@ -35,8 +43,6 @@ pub fn to_table_separator(num: usize) -> String {
 mod tests {
     use super::*;
 
-    // Generic Markdown tests
-
     #[test]
     fn to_header_should_create_header_1() {
         assert_eq!("# My Header\n\n", to_header(1, "My Header"));
@@ -50,6 +56,16 @@ mod tests {
     #[test]
     fn to_description_should_create_description() {
         assert_eq!("> My description\n\n", to_description("My description"));
+    }
+
+    #[test]
+    fn to_inline_code_should_wrap_in_backticks_when_not_empty() {
+        assert_eq!("`foo`", to_inline_code("foo"));
+    }
+
+    #[test]
+    fn to_inline_code_should_return_empty_when_empty() {
+        assert_eq!("", to_inline_code(""));
     }
 
     #[test]

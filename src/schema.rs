@@ -26,17 +26,6 @@ impl fmt::Display for SchemaError {
 
 impl Error for SchemaError {}
 
-pub trait TableItem {
-    fn table_fields(&self) -> Vec<String>;
-}
-
-fn to_safe_string(opt_s: &Option<String>) -> String {
-    match opt_s {
-        Some(s) => s.trim().replace("\n", ""),
-        None => "".to_string(),
-    }
-}
-
 #[derive(Debug, Deserialize, Serialize)]
 pub struct Type {
     pub name: Option<String>,
@@ -65,20 +54,6 @@ pub struct Field {
     pub deprecation_reason: Option<String>,
 }
 
-impl TableItem for Field {
-    fn table_fields(&self) -> Vec<String> {
-        let type_name = match self.field_type.as_ref() {
-            Some(typ) => typ.decorated_name(),
-            None => "".to_string(),
-        };
-        vec![
-            to_safe_string(&self.name),
-            type_name,
-            to_safe_string(&self.description),
-        ]
-    }
-}
-
 #[derive(Clone, Debug, Deserialize, Eq, Ord, PartialEq, PartialOrd, Serialize)]
 pub struct Input {
     pub name: Option<String>,
@@ -89,20 +64,6 @@ pub struct Input {
     pub default_value: Option<String>,
 }
 
-impl TableItem for Input {
-    fn table_fields(&self) -> Vec<String> {
-        let type_name = match self.input_type.as_ref() {
-            Some(typ) => typ.decorated_name(),
-            None => "".to_string(),
-        };
-        vec![
-            to_safe_string(&self.name),
-            type_name,
-            to_safe_string(&self.description),
-            to_safe_string(&self.default_value),
-        ]
-    }
-}
 #[derive(Clone, Debug, Deserialize, Eq, Ord, PartialEq, PartialOrd, Serialize)]
 pub struct Enum {
     pub name: Option<String>,
@@ -111,26 +72,6 @@ pub struct Enum {
     pub is_deprecated: Option<bool>,
     #[serde(alias = "deprecationReason")]
     pub deprecation_reason: Option<String>,
-}
-
-impl TableItem for Enum {
-    fn table_fields(&self) -> Vec<String> {
-        let is_deprecated = match &self.is_deprecated {
-            Some(is_deprecated) => *is_deprecated,
-            None => false,
-        };
-        let deprecation_reason = to_safe_string(&self.deprecation_reason);
-        let dr = if is_deprecated {
-            deprecation_reason
-        } else {
-            "no".to_string()
-        };
-        vec![
-            to_safe_string(&self.name),
-            to_safe_string(&self.description),
-            dr,
-        ]
-    }
 }
 
 #[derive(Clone, Debug, Deserialize, Eq, Ord, PartialEq, PartialOrd, Serialize)]
@@ -1063,103 +1004,5 @@ mod tests {
     }"#;
         let schema = Schema::from_str(&response).unwrap();
         assert_eq!(0, schema.get_types_of_kind("BAR").len());
-    }
-
-    #[test]
-    fn to_safe_string_should_return_string_when_some() {
-        assert_eq!(
-            "hello".to_string(),
-            to_safe_string(&Some("hello".to_string()))
-        );
-    }
-
-    #[test]
-    fn to_safe_string_should_return_empty_string_when_none() {
-        assert_eq!("".to_string(), to_safe_string(&None));
-    }
-
-    #[test]
-    fn input_table_fields_should_return_table_fields_when_some() {
-        let input = Input {
-            name: Some("name".to_string()),
-            description: Some("description".to_string()),
-            input_type: Some(TypeRef {
-                name: None,
-                kind: Some("NON_NULL".to_string()),
-                of_type: Some(Box::new(TypeRef {
-                    name: Some("ID".to_string()),
-                    kind: Some("SCALAR".to_string()),
-                    of_type: None,
-                })),
-            }),
-            default_value: Some("default".to_string()),
-        };
-        let fields = input.table_fields();
-        assert_eq!(4, fields.len());
-        assert_eq!("name".to_string(), fields[0]);
-        assert_eq!("ID!".to_string(), fields[1]);
-        assert_eq!("description".to_string(), fields[2]);
-        assert_eq!("default".to_string(), fields[3]);
-    }
-
-    #[test]
-    fn input_table_fields_should_return_table_fields_when_none() {
-        let input = Input {
-            name: None,
-            description: None,
-            input_type: None,
-            default_value: None,
-        };
-        let fields = input.table_fields();
-        assert_eq!(4, fields.len());
-        assert_eq!("".to_string(), fields[0]);
-        assert_eq!("".to_string(), fields[1]);
-        assert_eq!("".to_string(), fields[2]);
-        assert_eq!("".to_string(), fields[3]);
-    }
-
-    #[test]
-    fn enum_table_fields_should_return_table_fields_when_some() {
-        let enm = Enum {
-            name: Some("name".to_string()),
-            description: Some("description".to_string()),
-            is_deprecated: Some(true),
-            deprecation_reason: Some("meh".to_string()),
-        };
-        let fields = enm.table_fields();
-        assert_eq!(3, fields.len());
-        assert_eq!("name".to_string(), fields[0]);
-        assert_eq!("description".to_string(), fields[1]);
-        assert_eq!("meh".to_string(), fields[2]);
-    }
-
-    #[test]
-    fn enum_table_fields_should_return_table_fields_when_some_and_is_deprecated_is_false() {
-        let enm = Enum {
-            name: Some("name".to_string()),
-            description: Some("description".to_string()),
-            is_deprecated: Some(false),
-            deprecation_reason: Some("meh".to_string()),
-        };
-        let fields = enm.table_fields();
-        assert_eq!(3, fields.len());
-        assert_eq!("name".to_string(), fields[0]);
-        assert_eq!("description".to_string(), fields[1]);
-        assert_eq!("no".to_string(), fields[2]);
-    }
-
-    #[test]
-    fn enum_table_fields_should_return_table_fields_when_none() {
-        let enm = Enum {
-            name: None,
-            description: None,
-            is_deprecated: None,
-            deprecation_reason: None,
-        };
-        let fields = enm.table_fields();
-        assert_eq!(3, fields.len());
-        assert_eq!("".to_string(), fields[0]);
-        assert_eq!("".to_string(), fields[1]);
-        assert_eq!("no".to_string(), fields[2]);
     }
 }
