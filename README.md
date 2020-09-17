@@ -107,10 +107,10 @@ $ gumwood --url https://example.com/graphql --out-dir /path/to/output --multiple
 - [x] Enums
 - [x] Unions
 - [x] Scalars
-- [ ] Add links (e.g. from types listed in queries to their actual types)
-- [ ] More/better information on Queries markdown
-- [ ] More/better information on Mutations markdown
-- [ ] More/better information on Subscriptions markdown
+- [x] Add links (e.g. from types listed in queries to their actual types)
+- [x] More/better information on Queries markdown
+- [x] More/better information on Mutations markdown
+- [x] More/better information on Subscriptions markdown
 - [ ] Optional templates for markdown format
 - [ ] More automated testing
 - [ ] Code coverage and banner as part of CI/CD

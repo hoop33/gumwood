@@ -1,7 +1,22 @@
 use super::markdown::*;
-use super::schema::{Enum, Field, Input, Schema, Type};
+use super::schema::{Enum, Field, Input, Schema, Type, TypeRef};
+use lazy_static::lazy_static;
 use std::collections::HashMap;
 use std::error::Error;
+use titlecase::titlecase;
+
+lazy_static! {
+    static ref GRAPHQL_TYPES: HashMap<&'static str, &'static str> = {
+        let mut map = HashMap::new();
+        map.insert("INPUT_OBJECT", "inputs");
+        map.insert("OBJECT", "objects");
+        map.insert("ENUM", "enums");
+        map.insert("INTERFACE", "interfaces");
+        map.insert("UNION", "unions");
+        map.insert("SCALAR", "scalars");
+        map
+    };
+}
 
 #[derive(Debug)]
 pub struct Markdown {
@@ -28,30 +43,13 @@ impl Markdown {
             "subscriptions".to_string(),
             schema_type_to_markdown(schema, schema.get_subscription_name()),
         );
-        contents.insert(
-            "inputs".to_string(),
-            types_to_markdown(schema, "Inputs", "INPUT_OBJECT"),
-        );
-        contents.insert(
-            "objects".to_string(),
-            types_to_markdown(schema, "Objects", "OBJECT"),
-        );
-        contents.insert(
-            "enums".to_string(),
-            types_to_markdown(schema, "Enums", "ENUM"),
-        );
-        contents.insert(
-            "interfaces".to_string(),
-            types_to_markdown(schema, "Interfaces", "INTERFACE"),
-        );
-        contents.insert(
-            "unions".to_string(),
-            types_to_markdown(schema, "Unions", "UNION"),
-        );
-        contents.insert(
-            "scalars".to_string(),
-            types_to_markdown(schema, "Scalars", "SCALAR"),
-        );
+
+        for (graphql, friendly) in GRAPHQL_TYPES.iter() {
+            contents.insert(
+                friendly.to_string(),
+                types_to_markdown(schema, &titlecase(friendly), graphql),
+            );
+        }
 
         contents
     }
@@ -106,7 +104,7 @@ fn type_to_markdown(typ: &Type) -> String {
     let mut s = String::new();
 
     match &typ.name {
-        Some(name) => s.push_str(&to_header(2, &name)),
+        Some(name) => s.push_str(&to_header(2, &to_named_anchor(name))),
         None => {}
     }
 
@@ -193,12 +191,16 @@ pub trait TableItem {
 impl TableItem for Field {
     fn table_fields(&self) -> Vec<String> {
         let type_name = match self.field_type.as_ref() {
-            Some(typ) => typ.decorated_name(),
+            Some(typ) => typ.get_decorated_name(),
+            None => "".to_string(),
+        };
+        let link = match self.field_type.as_ref() {
+            Some(typ) => get_link_for_type_ref(typ),
             None => "".to_string(),
         };
         vec![
             to_inline_code(&to_safe_string(&self.name)),
-            to_inline_code(&type_name),
+            to_link(&to_inline_code(&type_name), &link),
             to_safe_string(&self.description),
         ]
     }
@@ -207,12 +209,16 @@ impl TableItem for Field {
 impl TableItem for Input {
     fn table_fields(&self) -> Vec<String> {
         let type_name = match self.input_type.as_ref() {
-            Some(typ) => typ.decorated_name(),
+            Some(typ) => typ.get_decorated_name(),
+            None => "".to_string(),
+        };
+        let link = match self.input_type.as_ref() {
+            Some(typ) => get_link_for_type_ref(typ),
             None => "".to_string(),
         };
         vec![
             to_inline_code(&to_safe_string(&self.name)),
-            to_inline_code(&type_name),
+            to_link(&to_inline_code(&type_name), &link),
             to_safe_string(&self.description),
             to_inline_code(&to_safe_string(&self.default_value)),
         ]
@@ -281,7 +287,13 @@ fn field_to_markdown(field: &Field) -> String {
     }
 
     match &field.field_type {
-        Some(typ) => s.push_str(&to_label("Type", &to_inline_code(&typ.decorated_name()))),
+        Some(typ) => s.push_str(&to_label(
+            "Type",
+            &to_link(
+                &to_inline_code(&typ.get_decorated_name()),
+                &get_link_for_type_ref(&typ),
+            ),
+        )),
         None => {}
     }
 
@@ -306,6 +318,19 @@ fn field_to_markdown(field: &Field) -> String {
     }
 
     s
+}
+
+fn get_link_for_type_ref(type_ref: &TypeRef) -> String {
+    let kind = type_ref.get_actual_kind();
+    let link_to: &str = match GRAPHQL_TYPES.get::<str>(&kind) {
+        Some(friendly) => friendly,
+        None => "",
+    };
+    format!(
+        "{}.md#{}",
+        link_to,
+        type_ref.get_actual_name().to_lowercase()
+    )
 }
 
 #[cfg(test)]
@@ -648,7 +673,7 @@ mod tests {
         assert_eq!(
             r#"# Objects
 
-## Player
+## <a name="player"></a>Player
 
 > A player
 
@@ -685,7 +710,7 @@ mod tests {
             }]),
         };
         assert_eq!(
-            r#"## Player
+            r#"## <a name="player"></a>Player
 
 > This is a player
 
@@ -733,7 +758,7 @@ mod tests {
         let fields = input.table_fields();
         assert_eq!(4, fields.len());
         assert_eq!("`name`".to_string(), fields[0]);
-        assert_eq!("`ID!`".to_string(), fields[1]);
+        assert_eq!("[`ID!`](scalars.md#id)".to_string(), fields[1]);
         assert_eq!("description".to_string(), fields[2]);
         assert_eq!("`default`".to_string(), fields[3]);
     }

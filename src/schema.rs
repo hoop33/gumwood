@@ -91,7 +91,25 @@ impl TypeRef {
         self.kind.is_some() && self.kind.as_ref().unwrap() == "LIST"
     }
 
-    pub fn decorated_name(&self) -> String {
+    pub fn get_actual_name(&self) -> String {
+        self.recurse_actual_name(TYPE_LEVELS)
+    }
+
+    fn recurse_actual_name(&self, level: u32) -> String {
+        if level == 0 {
+            return "".to_string();
+        }
+
+        match &self.name {
+            Some(name) => name.to_string(),
+            None => match &self.of_type {
+                Some(typ) => typ.recurse_actual_name(level - 1),
+                None => "".to_string(),
+            },
+        }
+    }
+
+    pub fn get_decorated_name(&self) -> String {
         self.recurse_decorated_name(TYPE_LEVELS)
     }
 
@@ -122,6 +140,25 @@ impl TypeRef {
         }
 
         s
+    }
+
+    pub fn get_actual_kind(&self) -> String {
+        self.recurse_actual_kind(TYPE_LEVELS)
+    }
+
+    fn recurse_actual_kind(&self, level: u32) -> String {
+        if level == 0 {
+            return "".to_string();
+        }
+
+        // When we encounter ofType: null, we have the kind
+        match &self.of_type {
+            Some(typ) => typ.recurse_actual_kind(level - 1),
+            None => match &self.kind {
+                Some(kind) => kind.to_string(),
+                None => "".to_string(),
+            },
+        }
     }
 }
 
@@ -807,7 +844,7 @@ mod tests {
             kind: None,
             of_type: None,
         };
-        assert_eq!("", tr.decorated_name());
+        assert_eq!("", tr.get_decorated_name());
     }
 
     #[test]
@@ -817,7 +854,7 @@ mod tests {
             kind: None,
             of_type: None,
         };
-        assert_eq!("myName", tr.decorated_name());
+        assert_eq!("myName", tr.get_decorated_name());
     }
 
     #[test]
@@ -827,7 +864,7 @@ mod tests {
             kind: Some("NON_NULL".to_string()),
             of_type: None,
         };
-        assert_eq!("myName!", tr.decorated_name());
+        assert_eq!("myName!", tr.get_decorated_name());
     }
 
     #[test]
@@ -837,7 +874,7 @@ mod tests {
             kind: Some("LIST".to_string()),
             of_type: None,
         };
-        assert_eq!("[myName]", tr.decorated_name());
+        assert_eq!("[myName]", tr.get_decorated_name());
     }
 
     #[test]
@@ -852,7 +889,7 @@ mod tests {
                 of_type: None,
             })),
         };
-        assert_eq!("[myName!]", tr.decorated_name());
+        assert_eq!("[myName!]", tr.get_decorated_name());
     }
 
     #[test]
@@ -867,7 +904,7 @@ mod tests {
                 of_type: None,
             })),
         };
-        assert_eq!("[myName]!", tr.decorated_name());
+        assert_eq!("[myName]!", tr.get_decorated_name());
     }
 
     #[test]
@@ -886,7 +923,7 @@ mod tests {
                 })),
             })),
         };
-        assert_eq!("[myName!]!", tr.decorated_name());
+        assert_eq!("[myName!]!", tr.get_decorated_name());
     }
 
     #[test]
@@ -900,7 +937,7 @@ mod tests {
                 of_type: None,
             })),
         };
-        assert_eq!("[MyInputObject]", tr.decorated_name());
+        assert_eq!("[MyInputObject]", tr.get_decorated_name());
     }
 
     #[test]
@@ -942,7 +979,101 @@ mod tests {
                 })),
             })),
         };
-        assert_eq!("", tr.decorated_name());
+        assert_eq!("", tr.get_decorated_name());
+    }
+
+    #[test]
+    fn typeref_actual_kind_should_return_empty_when_none() {
+        let tr = TypeRef {
+            name: None,
+            kind: None,
+            of_type: None,
+        };
+        assert_eq!("", tr.get_actual_kind());
+    }
+
+    #[test]
+    fn typeref_actual_kind_should_return_kind_when_of_type_is_none() {
+        let tr = TypeRef {
+            name: None,
+            kind: Some("SCALAR".to_string()),
+            of_type: None,
+        };
+        assert_eq!("SCALAR", tr.get_actual_kind());
+    }
+
+    #[test]
+    fn typeref_actual_kind_should_return_nested_kind_when_of_type_is_some() {
+        let tr = TypeRef {
+            name: None,
+            kind: Some("NON_NULL".to_string()),
+            of_type: Some(Box::new(TypeRef {
+                name: None,
+                kind: Some("OBJECT".to_string()),
+                of_type: None,
+            })),
+        };
+        assert_eq!("OBJECT", tr.get_actual_kind());
+    }
+
+    #[test]
+    fn typeref_actual_kind_should_return_third_nested_kind_when_of_type_is_some() {
+        let tr = TypeRef {
+            name: None,
+            kind: Some("NON_NULL".to_string()),
+            of_type: Some(Box::new(TypeRef {
+                name: None,
+                kind: Some("LIST".to_string()),
+                of_type: Some(Box::new(TypeRef {
+                    name: None,
+                    kind: Some("OBJECT".to_string()),
+                    of_type: None,
+                })),
+            })),
+        };
+        assert_eq!("OBJECT", tr.get_actual_kind());
+    }
+
+    #[test]
+    fn typeref_actual_kind_should_short_circuit_when_nested_too_deep() {
+        let tr = TypeRef {
+            name: None,
+            kind: None,
+            of_type: Some(Box::new(TypeRef {
+                name: None,
+                kind: None,
+                of_type: Some(Box::new(TypeRef {
+                    name: None,
+                    kind: None,
+                    of_type: Some(Box::new(TypeRef {
+                        name: None,
+                        kind: None,
+                        of_type: Some(Box::new(TypeRef {
+                            name: None,
+                            kind: None,
+                            of_type: Some(Box::new(TypeRef {
+                                name: None,
+                                kind: None,
+                                of_type: Some(Box::new(TypeRef {
+                                    name: None,
+                                    kind: None,
+                                    of_type: Some(Box::new(TypeRef {
+                                        name: None,
+                                        kind: None,
+                                        of_type: Some(Box::new(TypeRef {
+                                            name: None,
+                                            kind: None,
+                                            of_type: None,
+                                        })),
+                                    })),
+                                })),
+                            })),
+                        })),
+                    })),
+                })),
+            })),
+        };
+        assert_eq!("", tr.get_actual_kind());
     }
 
     #[test]

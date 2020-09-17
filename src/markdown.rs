@@ -22,9 +22,21 @@ pub fn to_label(label: &str, value: &str) -> String {
     format!("**{}:** {}\n\n", label, value)
 }
 
+pub fn to_link(text: &str, destination: &str) -> String {
+    if text.len() == 0 {
+        "".to_string()
+    } else {
+        format!("[{}]({})", text, destination)
+    }
+}
+
 pub fn to_list(items: &[String]) -> String {
     let list: String = items.iter().map(|item| format!("* {}\n", item)).collect();
     format!("{}\n", list)
+}
+
+pub fn to_named_anchor(text: &str) -> String {
+    format!("<a name=\"{}\"></a>{}", text.to_lowercase(), text)
 }
 
 pub fn to_notice(notice: &str) -> String {
@@ -74,6 +86,21 @@ mod tests {
             "**My Label:** My value\n\n",
             to_label("My Label", "My value")
         );
+    }
+
+    #[test]
+    fn to_link_should_create_link() {
+        assert_eq!("[foo](bar)", to_link("foo", "bar"));
+    }
+
+    #[test]
+    fn to_named_anchor_should_create_named_anchor() {
+        assert_eq!("<a name=\"foo\"></a>foo", to_named_anchor("foo"));
+    }
+
+    #[test]
+    fn to_named_anchor_should_create_named_anchor_when_mixed_case() {
+        assert_eq!("<a name=\"foo\"></a>Foo", to_named_anchor("Foo"));
     }
 
     #[test]
