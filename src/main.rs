@@ -4,70 +4,49 @@ mod schema_markdown;
 
 use schema::Schema;
 use schema_markdown::Markdown;
-use std::{error::Error, fmt, fs::File, io::Write, path::PathBuf};
+use std::io::{self, Read, Write};
+use std::{error::Error, fs::File, path::PathBuf};
 use structopt::StructOpt;
 
-#[derive(Debug)]
-struct CliError {
-    message: String,
-}
-
-impl CliError {
-    pub fn new(message: &str) -> CliError {
-        CliError {
-            message: message.to_string(),
-        }
-    }
-}
-
-impl fmt::Display for CliError {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{}", self.message)
-    }
-}
-
-impl Error for CliError {}
-
 #[derive(Debug, StructOpt)]
-#[structopt(name = "gumwood", about = "Convert a GraphQL schema to Markdown")]
+#[structopt(author)]
+/// Convert a GraphQL schema to Markdown
+///
+/// Specify the source of the schema using --json, --url, or --schema.{n}
+/// If you don't specify a source, gumwood will read from stdin.{n}
+/// gumwood will write the markdown files to the current directory,{n}
+/// unless you specify a different directory using --out-dir.
 struct Cli {
-    #[structopt(short, long, help("The URL to introspect for the GraphQL schema"))]
+    #[structopt(short, long, help("URL to introspect"))]
     url: Option<String>,
 
     #[structopt(
         short,
         long,
-        help("The file containing the JSON response of a GraphQL introspection query"),
+        help("File containing introspection response"),
         parse(from_os_str)
     )]
     json: Option<PathBuf>,
 
-    #[structopt(short, long, help("The GraphQL schema file"), parse(from_os_str))]
+    #[structopt(short, long, help("GraphQL schema file"), parse(from_os_str))]
     schema: Option<PathBuf>,
 
-    #[structopt(
-        short,
-        long,
-        help("Header to send in name:value format; allows multiple")
-    )]
+    #[structopt(short = "H", long, help("Header to send in URL request"))]
     header: Vec<String>,
 
     #[structopt(
         short,
         long,
-        help("The output directory for the generated markdown"),
-        parse(from_os_str)
+        help("Output directory"),
+        parse(from_os_str),
+        default_value = "."
     )]
     out_dir: PathBuf,
 
     #[structopt(short, long, help("Splits output into multiple files"))]
     multiple: bool,
 
-    #[structopt(
-        short,
-        long,
-        help("Front matter to include at the top of output files")
-    )]
+    #[structopt(short, long, help("Front matter for output files"))]
     front_matter: Option<String>,
 }
 
@@ -80,9 +59,10 @@ fn get_schema(args: &Cli) -> Result<Schema, Box<dyn Error>> {
     } else if args.schema.is_some() {
         schema = Schema::from_schema(&args.schema.as_ref().unwrap())?;
     } else {
-        return Err(Box::new(CliError::new(
-            "you must specify url, json, or schema",
-        )));
+        // Read from stdin
+        let mut buffer = String::new();
+        io::stdin().read_to_string(&mut buffer)?;
+        schema = Schema::from_str(&buffer)?;
     }
 
     Ok(schema)
@@ -202,12 +182,5 @@ mod tests {
         let args = Cli::from_iter(vec.iter());
         assert!(!args.multiple);
         Ok(())
-    }
-
-    #[test]
-    fn get_schema_should_return_error_when_none_specified() {
-        let vec = vec!["gumroad", "--out-dir", "./out"];
-        let args = Cli::from_iter(vec.iter());
-        assert!(get_schema(&args).is_err());
     }
 }

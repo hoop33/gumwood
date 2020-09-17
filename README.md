@@ -6,7 +6,7 @@
 
 ## Introduction
 
-Gumwood is pre-alpha. Very early days. Things are changing frequently. Not everything documented here works yet.
+Gumwood is alpha and is changing frequently. Not everything documented here works yet.
 
 Its purpose is to prepare a GraphQL schema for publication on a Gatsby or Docusaurus site, or any other site that generates HTML documentation from markdown files.
 
@@ -38,7 +38,7 @@ OPTIONS:
     -u, --url <url>                      The URL to introspect for the GraphQL schema
 ```
 
-**Note:** You must specify a source: `--url`, `--json`, or `--schema`.
+**Note:** If you do not specify a source (`--url`, `--json`, or `--schema`), Gumwood will read from `stdin`. This is useful for piping or redirecting your JSON introspection query results into Gumwood. If you don't pipe or redirect anything, Gumwood will wait for you to type your content before continuing.
 
 Convert a GraphQL schema to a single markdown file:
 
