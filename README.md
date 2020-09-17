@@ -19,23 +19,46 @@ Get help:
 ```sh
 $ gumwood --help
 gumwood 0.1.0
+Rob Warner <rwarner@grailbox.com>
 Convert a GraphQL schema to Markdown
 
+Specify the source of the schema using --json, --url, or --schema.
+ If you don't specify a source, gumwood will read from stdin.
+ gumwood will write the markdown files to the current directory,
+ unless you specify a different directory using --out-dir.
+
 USAGE:
-    gumwood [FLAGS] [OPTIONS] --out-dir <out-dir>
+    gumwood [FLAGS] [OPTIONS]
 
 FLAGS:
-        --help        Prints help information
-    -m, --multiple    Splits output into multiple files
-    -V, --version     Prints version information
+    -h, --help        
+            Prints help information
+
+    -m, --multiple    
+            Splits output into multiple files
+
+    -V, --version     
+            Prints version information
+
 
 OPTIONS:
-    -f, --front-matter <front-matter>    Front matter to include at the top of output files
-    -h, --header <header>...             Header to send in name:value format; allows multiple
-    -j, --json <json>                    The file containing the JSON response of a GraphQL introspection query
-    -o, --out-dir <out-dir>              The output directory for the generated markdown
-    -s, --schema <schema>                The GraphQL schema file
-    -u, --url <url>                      The URL to introspect for the GraphQL schema
+    -f, --front-matter <front-matter>    
+            Front matter for output files
+
+    -H, --header <header>...             
+            Header to send in URL request
+
+    -j, --json <json>                    
+            File containing introspection response
+
+    -o, --out-dir <out-dir>              
+            Output directory [default: .]
+
+    -s, --schema <schema>                
+            GraphQL schema file
+
+    -u, --url <url>                      
+            URL to introspect
 ```
 
 **Note:** If you do not specify a source (`--url`, `--json`, or `--schema`), Gumwood will read from `stdin`. This is useful for piping or redirecting your JSON introspection query results into Gumwood. If you don't pipe or redirect anything, Gumwood will wait for you to type your content before continuing.
