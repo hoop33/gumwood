@@ -24,7 +24,7 @@ Rob Warner <rwarner@grailbox.com>
 Convert a GraphQL schema to Markdown
 
 Specify the source of the schema using --json, --url, or --schema.
- If you do not specify a source, gumwood will read from stdin.
+ If you don't specify a source, gumwood will read from stdin.
  gumwood will write the markdown files to the current directory,
  unless you specify a different directory using --out-dir.
 
@@ -32,13 +32,16 @@ USAGE:
     gumwood [FLAGS] [OPTIONS]
 
 FLAGS:
-    -h, --help        
+    -h, --help               
             Prints help information
 
-    -m, --multiple    
+    -m, --multiple           
             Splits output into multiple files
 
-    -V, --version     
+        --suppress-output    
+            Don't write any output
+
+    -V, --version            
             Prints version information
 
 
@@ -113,8 +116,8 @@ $ gumwood --url https://example.com/graphql --out-dir /path/to/output --multiple
 - [x] More/better information on Mutations markdown
 - [x] More/better information on Subscriptions markdown
 - [ ] Optional templates for markdown format
-- [ ] More automated testing
-- [ ] Code coverage and banner as part of CI/CD
+- [x] More automated testing
+- [x] Code coverage and banner as part of CI/CD
 
 ## Contributing
 
