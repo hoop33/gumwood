@@ -4,8 +4,13 @@ mod schema_markdown;
 
 use schema::Schema;
 use schema_markdown::Markdown;
-use std::io::{self, Read, Write};
-use std::{error::Error, fs::File, path::PathBuf};
+use std::{
+    error::Error,
+    fs::File,
+    io::{self, Read, Write},
+    path::PathBuf,
+    process,
+};
 use structopt::StructOpt;
 
 #[derive(Debug, StructOpt)]
@@ -16,7 +21,7 @@ use structopt::StructOpt;
 /// If you don't specify a source, gumwood will read from stdin.{n}
 /// gumwood will write the markdown files to the current directory,{n}
 /// unless you specify a different directory using --out-dir.
-struct Cli {
+struct Options {
     #[structopt(short, long, help("URL to introspect"))]
     url: Option<String>,
 
@@ -46,11 +51,14 @@ struct Cli {
     #[structopt(short, long, help("Splits output into multiple files"))]
     multiple: bool,
 
+    #[structopt(long, help("Don't write any output"))]
+    suppress_output: bool,
+
     #[structopt(short, long, help("Front matter for output files"))]
     front_matter: Option<String>,
 }
 
-fn get_schema(args: &Cli) -> Result<Schema, Box<dyn Error>> {
+fn get_schema(args: &Options) -> Result<Schema, Box<dyn Error>> {
     let schema: Schema;
     if args.url.is_some() {
         schema = Schema::from_url(&args.url.as_ref().unwrap(), &args.header)?;
@@ -68,21 +76,30 @@ fn get_schema(args: &Cli) -> Result<Schema, Box<dyn Error>> {
     Ok(schema)
 }
 
-fn main() -> Result<(), Box<dyn Error>> {
-    let args = Cli::from_args();
-
+fn run(args: Options) -> Result<(), Box<dyn Error>> {
     let schema = get_schema(&args)?;
     let markdown = Markdown::with_front_matter(args.front_matter)?;
     let contents = markdown.generate_from_schema(&schema);
-    for (name, markdown) in contents {
-        if !markdown.is_empty() {
-            let out_file = format!("{}.md", name);
-            let mut file = File::create(&args.out_dir.join(out_file))?;
-            file.write_all(markdown.as_bytes())?;
+    if !args.suppress_output {
+        for (name, markdown) in contents {
+            if !markdown.is_empty() {
+                let out_file = format!("{}.md", name);
+                let mut file = File::create(&args.out_dir.join(out_file))?;
+                file.write_all(markdown.as_bytes())?;
+            }
         }
     }
 
     Ok(())
+}
+
+fn main() {
+    let args = Options::from_args();
+
+    if let Err(e) = run(args) {
+        println!("error: {}", e);
+        process::exit(1);
+    }
 }
 
 #[cfg(test)]
@@ -92,7 +109,7 @@ mod tests {
     #[test]
     fn it_should_return_ok_when_url_specified() -> Result<(), String> {
         let vec = vec![
-            "gumroad",
+            "gumwood",
             "--url",
             "https://example.com",
             "--header",
@@ -105,7 +122,7 @@ mod tests {
             "--front-matter",
             "a:b;c:d",
         ];
-        let args = Cli::from_iter(vec.iter());
+        let args = Options::from_iter(vec.iter());
         assert_eq!(args.url.unwrap(), "https://example.com");
         assert_eq!(args.header.len(), 2);
         assert_eq!(args.header[0], "name1:value1");
@@ -119,7 +136,7 @@ mod tests {
     #[test]
     fn it_should_return_ok_when_json_specified() -> Result<(), String> {
         let vec = vec![
-            "gumroad",
+            "gumwood",
             "--json",
             "foo.json",
             "--header",
@@ -132,7 +149,7 @@ mod tests {
             "--front-matter",
             "a:b;c:d",
         ];
-        let args = Cli::from_iter(vec.iter());
+        let args = Options::from_iter(vec.iter());
         assert_eq!(args.json.unwrap().display().to_string(), "foo.json");
         assert_eq!(args.header.len(), 2);
         assert_eq!(args.header[0], "name1:value1");
@@ -146,7 +163,7 @@ mod tests {
     #[test]
     fn it_should_return_ok_when_schema_specified() -> Result<(), String> {
         let vec = vec![
-            "gumroad",
+            "gumwood",
             "--schema",
             "schema.graphql",
             "--header",
@@ -159,7 +176,7 @@ mod tests {
             "--front-matter",
             "a:b;c:d",
         ];
-        let args = Cli::from_iter(vec.iter());
+        let args = Options::from_iter(vec.iter());
         assert_eq!(args.schema.unwrap().display().to_string(), "schema.graphql");
         assert_eq!(args.header.len(), 2);
         assert_eq!(args.header[0], "name1:value1");
@@ -173,14 +190,33 @@ mod tests {
     #[test]
     fn it_should_set_multiple_to_false_when_not_specified() -> Result<(), String> {
         let vec = vec![
-            "gumroad",
+            "gumwood",
             "--url",
             "https://example.com",
             "--out-dir",
             "./out",
         ];
-        let args = Cli::from_iter(vec.iter());
+        let args = Options::from_iter(vec.iter());
         assert!(!args.multiple);
         Ok(())
+    }
+
+    #[test]
+    fn it_should_return_error_when_schema_is_passed() {
+        let vec = vec!["gumwood", "--schema", "graphql.schema"];
+        let args = Options::from_iter(vec.iter());
+        assert!(run(args).is_err());
+    }
+
+    #[test]
+    fn it_should_process_testdata_response_without_error() {
+        let vec = vec![
+            "gumwood",
+            "--suppress-output",
+            "--json",
+            "testdata/response.json",
+        ];
+        let args = Options::from_iter(vec.iter());
+        assert!(run(args).is_ok());
     }
 }
