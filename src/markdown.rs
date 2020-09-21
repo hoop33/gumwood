@@ -11,7 +11,7 @@ pub fn to_description(text: &str) -> String {
 }
 
 pub fn to_inline_code(text: &str) -> String {
-    if text.len() == 0 {
+    if text.is_empty() {
         "".to_string()
     } else {
         format!("`{}`", text)
@@ -23,7 +23,7 @@ pub fn to_label(label: &str, value: &str) -> String {
 }
 
 pub fn to_link(text: &str, destination: &str) -> String {
-    if text.len() == 0 {
+    if text.is_empty() {
         "".to_string()
     } else {
         format!("[{}]({})", text, destination)
