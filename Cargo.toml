@@ -2,7 +2,7 @@
 name = "gumwood"
 version = "0.1.0"
 authors = ["Rob Warner <rwarner@grailbox.com>"]
-license = "MIT"
+license = "MIT OR Apache-2.0"
 description = "Convert a GraphQL schema to Markdown"
 readme = "README.md"
 homepage = "https://github.com/hoop33/gumwood"
