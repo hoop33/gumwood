@@ -64,8 +64,13 @@ pub fn to_link(text: &str, destination: &str) -> String {
 ///
 /// * `items` - the text of the items of the list
 pub fn to_list(items: &[String]) -> String {
-    let list: String = items.iter().map(|item| format!("* {}\n", item)).collect();
-    format!("{}\n", list)
+    format!(
+        "{}\n",
+        items
+            .iter()
+            .map(|item| format!("* {}\n", item))
+            .collect::<String>()
+    )
 }
 
 /// Returns an HTML named anchor (used of intra-document linking)
