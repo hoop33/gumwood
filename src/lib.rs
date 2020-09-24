@@ -12,14 +12,14 @@ use std::{
 };
 use structopt::StructOpt;
 
-#[derive(Debug, StructOpt)]
-#[structopt(author)]
 /// Convert a GraphQL schema to Markdown
 ///
 /// Specify the source of the schema using --json, --url, or --schema.{n}
 /// If you don't specify a source, gumwood will read from stdin.{n}
 /// gumwood will write the markdown files to the current directory,{n}
 /// unless you specify a different directory using --out-dir.
+#[derive(Debug, StructOpt)]
+#[structopt(author)]
 pub struct Options {
     #[structopt(short, long, help("URL to introspect"))]
     url: Option<String>,
@@ -75,7 +75,7 @@ fn get_schema(args: &Options) -> Result<Schema, Box<dyn Error>> {
     Ok(schema)
 }
 
-/// run takes the arguments from the Options struct and generates
+/// Takes the arguments from the Options struct and generates
 /// markdown for the specified schema.
 pub fn run(args: Options) -> Result<(), Box<dyn Error>> {
     let schema = get_schema(&args)?;

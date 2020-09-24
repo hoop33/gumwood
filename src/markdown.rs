@@ -1,3 +1,9 @@
+/// Returns a Markdown header
+///
+/// # Arguments
+///
+/// * `level` - The level of the header (i.e. how many leading '#'s)
+/// * `text` - The text of the header
 pub fn to_header(level: u8, text: &str) -> String {
     format!(
         "{} {}\n\n",
@@ -6,10 +12,20 @@ pub fn to_header(level: u8, text: &str) -> String {
     )
 }
 
+/// Returns a Markdown description
+///
+/// # Arguments
+///
+/// * `text` - the text of the description
 pub fn to_description(text: &str) -> String {
     format!("> {}\n\n", text)
 }
 
+/// Returns text as Markdown inline code
+///
+/// # Arguments
+///
+/// * `text` - the text of the inline code
 pub fn to_inline_code(text: &str) -> String {
     if text.is_empty() {
         "".to_string()
@@ -18,10 +34,22 @@ pub fn to_inline_code(text: &str) -> String {
     }
 }
 
+/// Returns a Markdown label and value pair
+///
+/// # Arguments
+///
+/// * `label` - the text of the label
+/// * `value` - the text of the value
 pub fn to_label(label: &str, value: &str) -> String {
     format!("**{}:** {}\n\n", label, value)
 }
 
+/// Returns a Markdown link
+///
+/// # Arguments
+///
+/// * `text` - the text of the link
+/// * `destination` - the destination of the link
 pub fn to_link(text: &str, destination: &str) -> String {
     if text.is_empty() {
         "".to_string()
@@ -30,23 +58,48 @@ pub fn to_link(text: &str, destination: &str) -> String {
     }
 }
 
+/// Returns a Markdown unordered list
+///
+/// # Arguments
+///
+/// * `items` - the text of the items of the list
 pub fn to_list(items: &[String]) -> String {
     let list: String = items.iter().map(|item| format!("* {}\n", item)).collect();
     format!("{}\n", list)
 }
 
+/// Returns an HTML named anchor (used of intra-document linking)
+///
+/// # Arguments
+///
+/// * `text` - the text for the link, which is also used for the anchor
 pub fn to_named_anchor(text: &str) -> String {
     format!("<a name=\"{}\"></a>{}", text.to_lowercase(), text)
 }
 
+/// Returns a Markdown notice
+///
+/// # Arguments
+///
+/// * `notice` - the text of the notice
 pub fn to_notice(notice: &str) -> String {
     format!("_{}_\n", notice)
 }
 
+/// Returns a markdown table row
+///
+/// # Arguments
+///
+/// * `items` - the text of the items (table cells)
 pub fn to_table_row(items: &[String]) -> String {
     format!("| {} |\n", items.join(" | "))
 }
 
+/// Returns a table separator row
+///
+/// # Arguments
+///
+/// * `num` - The number of columns in the table
 pub fn to_table_separator(num: usize) -> String {
     to_table_row(&vec!["---".to_string(); num])
 }
