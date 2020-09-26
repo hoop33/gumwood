@@ -5,6 +5,7 @@ mod schema_markdown;
 use schema::Schema;
 use schema_markdown::Markdown;
 use std::{
+    collections::HashMap,
     error::Error,
     fs::File,
     io::{self, Read, Write},
@@ -75,6 +76,39 @@ fn get_schema(args: &Options) -> Result<Schema, Box<dyn Error>> {
     Ok(schema)
 }
 
+fn write_multiple(
+    contents: &HashMap<String, String>,
+    out_dir: &PathBuf,
+) -> Result<(), Box<dyn Error>> {
+    for (name, markdown) in contents {
+        if !markdown.is_empty() {
+            let out_file = format!("{}.md", name);
+            let mut file = File::create(out_dir.join(out_file))?;
+            file.write_all(markdown.as_bytes())?;
+        }
+    }
+
+    Ok(())
+}
+
+fn write_single(
+    contents: &HashMap<String, String>,
+    out_dir: &PathBuf,
+) -> Result<(), Box<dyn Error>> {
+    let mut file = File::create(out_dir.join("graphql.md"))?;
+    let mut keys: Vec<_> = contents.keys().collect();
+    keys.sort();
+
+    for key in keys.iter() {
+        let markdown = contents.get(*key).unwrap();
+        if !markdown.is_empty() {
+            file.write_all(markdown.as_bytes())?;
+        }
+    }
+
+    Ok(())
+}
+
 /// Takes the arguments from the Options struct and generates
 /// markdown for the specified schema.
 pub fn run(args: Options) -> Result<(), Box<dyn Error>> {
@@ -82,12 +116,10 @@ pub fn run(args: Options) -> Result<(), Box<dyn Error>> {
     let markdown = Markdown::with_front_matter(args.front_matter)?;
     let contents = markdown.generate_from_schema(&schema);
     if !args.suppress_output {
-        for (name, markdown) in contents {
-            if !markdown.is_empty() {
-                let out_file = format!("{}.md", name);
-                let mut file = File::create(&args.out_dir.join(out_file))?;
-                file.write_all(markdown.as_bytes())?;
-            }
+        if args.multiple {
+            write_multiple(&contents, &args.out_dir)?;
+        } else {
+            write_single(&contents, &args.out_dir)?;
         }
     }
 

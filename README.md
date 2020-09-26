@@ -99,7 +99,7 @@ $ gumwood --url https://example.com/graphql --out-dir /path/to/output --multiple
 - [x] Custom headers in URL request
 - [x] Generation from an introspection result
 - [ ] Generation from a schema file
-- [ ] Write to single or multiple files (-m flag)
+- [x] Write to single or multiple files (-m flag)
 - [ ] Automatic versioning with semver
 - [ ] Automatic releases using GitHub Actions
 - [ ] Add front matter to generated file(s)
