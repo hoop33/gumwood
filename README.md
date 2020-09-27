@@ -11,7 +11,7 @@ Gumwood is alpha and is changing frequently. Not everything documented here work
 
 Its purpose is to prepare a GraphQL schema for publication on a Gatsby or Docusaurus site, or any other site that generates HTML documentation from markdown files.
 
-You specify a live GraphQL endpoint and whether you want the resulting markdown to be stored in a single file or multiple files, and Gumwood will generate the markdown with optional front matter.
+You specify a live GraphQL endpoint or the JSON result from a GraphQL introspection query. Gumwood will generate markdown for the GraphQL schema and write it to `stdout`. If you specify an output directory using the `--out-dir` option, Gumwood will split the output into multiple files, by GraphQL entity type, and write them to the output directory.
 
 ## Usage
 
@@ -25,8 +25,9 @@ Convert a GraphQL schema to Markdown
 
 Specify the source of the schema using --json, --url, or --schema.
  If you don't specify a source, gumwood will read from stdin.
- gumwood will write the markdown files to the current directory,
- unless you specify a different directory using --out-dir.
+ If you specify --out-dir, gumwood will split the output into
+ multiple files by type and write them to the specified directory.
+ If you don't specify --out-dir, gumwood will write to stdout.
 
 USAGE:
     gumwood [FLAGS] [OPTIONS]
@@ -34,9 +35,6 @@ USAGE:
 FLAGS:
     -h, --help               
             Prints help information
-
-    -m, --multiple           
-            Splits output into multiple files
 
         --suppress-output    
             Don't write any output
@@ -56,7 +54,7 @@ OPTIONS:
             File containing introspection response
 
     -o, --out-dir <out-dir>              
-            Output directory [default: .]
+            Output directory for multiple files
 
     -s, --schema <schema>                
             GraphQL schema file
@@ -67,29 +65,29 @@ OPTIONS:
 
 **Note:** If you do not specify a source (`--url`, `--json`, or `--schema`), Gumwood will read from `stdin`. This is useful for piping or redirecting your JSON introspection query results into Gumwood. If you don't pipe or redirect anything, Gumwood will wait for you to type your content before continuing.
 
-Convert a GraphQL schema to a single markdown file:
+Convert a GraphQL schema to a single stream written to `stdout`:
 
 ```sh
-$ gumwood --url https://example.com/graphql --out-dir /path/to/output
+$ gumwood --url https://example.com/graphql
 ```
 
 Convert a GraphQL schema to multiple markdown files, divided by type:
 
 ```sh
-$ gumwood --url https://example.com/graphql --out-dir /path/to/output --multiple
+$ gumwood --url https://example.com/graphql --out-dir /path/to/output
 ```
 
 Convert a GraphQL schema to multiple markdown files, divided by type, with front matter:
 
 ```sh
-$ gumwood --url https://example.com/graphql --out-dir /path/to/output --multiple \
+$ gumwood --url https://example.com/graphql --out-dir /path/to/output \
 --front-matter "key1:value1;key2:value2"
 ```
 
 Convert a GraphQL schema to multiple markdown files, divided by type, when the GraphQL endpoint requires authorization and a user agent:
 
 ```sh
-$ gumwood --url https://example.com/graphql --out-dir /path/to/output --multiple \
+$ gumwood --url https://example.com/graphql --out-dir /path/to/output \
 --header "Authorization: bearer myreallylongtoken" --header "User-Agent: gumwood"
 ```
 
@@ -153,7 +151,7 @@ Gumwood generally follows an MVC pattern:
 
 * Model: `schema.rs`
 * View: `schema_markdown.rs` (markdown functions that know about `schema`) and `markdown.rs` (generic markdown functions that know nothing about `schema`)
-* Controller: `main.rs`
+* Controller: `main.rs` and `lib.rs`
 
 #### Schema
 
@@ -184,9 +182,13 @@ Responsible for generating generic markdown &mdash; utility functions that know 
 Responsible for:
 
 * Parsing the command-line arguments
+* Calling `run`
+
+#### Lib
+
 * Getting the schema from `schema.rs`
 * Getting the markdown from `schema_markdown.rs`
-* Writing the markdown file(s)
+* Writing the markdown to `stdout` or files
 
 ## FAQ
 
@@ -197,10 +199,12 @@ Responsible for:
 
 Gumwood uses the following open source libraries &mdash; thank you!
 
+* [lazy_static](https://github.com/rust-lang-nursery/lazy-static.rs)
 * [reqwest](https://crates.io/crates/reqwest)
 * [serde](https://crates.io/crates/serde)
 * [serde-json](https://crates.io/crates/serde_json)
 * [structopt](https://crates.io/crates/structopt)
+* [titlecase](https://github.com/wezm/titlecase)
 
 Apologies if I've inadvertently omitted any library.
 

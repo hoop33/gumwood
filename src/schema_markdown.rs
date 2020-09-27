@@ -20,12 +20,16 @@ lazy_static! {
 
 #[derive(Debug)]
 pub struct Markdown {
+    multiple: bool,
     front_matter: Option<String>,
 }
 
 impl Markdown {
-    pub fn with_front_matter(front_matter: Option<String>) -> Result<Markdown, Box<dyn Error>> {
-        Ok(Markdown { front_matter })
+    pub fn new(multiple: bool, front_matter: Option<String>) -> Result<Markdown, Box<dyn Error>> {
+        Ok(Markdown {
+            multiple,
+            front_matter,
+        })
     }
 
     pub fn generate_from_schema(&self, schema: &Schema) -> HashMap<String, String> {
@@ -339,18 +343,18 @@ mod tests {
     use crate::schema::TypeRef;
 
     #[test]
-    fn with_front_matter_should_return_ok_when_none() {
-        assert!(Markdown::with_front_matter(None).is_ok());
+    fn markdown_new_should_return_ok_when_none() {
+        assert!(Markdown::new(false, None).is_ok());
     }
 
     #[test]
-    fn with_front_matter_should_return_ok_when_some() {
-        assert!(Markdown::with_front_matter(Some("fm:foo".to_string())).is_ok());
+    fn markdown_new_should_return_ok_when_some() {
+        assert!(Markdown::new(false, Some("fm:foo".to_string())).is_ok());
     }
 
     #[test]
     fn generate_from_schema_should_return_empty_when_empty_schema() {
-        let markdown = Markdown::with_front_matter(None).unwrap();
+        let markdown = Markdown::new(false, None).unwrap();
         let schema = &Schema {
             query_type: None,
             mutation_type: None,

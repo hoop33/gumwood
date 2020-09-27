@@ -17,8 +17,9 @@ use structopt::StructOpt;
 ///
 /// Specify the source of the schema using --json, --url, or --schema.{n}
 /// If you don't specify a source, gumwood will read from stdin.{n}
-/// gumwood will write the markdown files to the current directory,{n}
-/// unless you specify a different directory using --out-dir.
+/// If you specify --out-dir, gumwood will split the output into{n}
+/// multiple files by type and write them to the specified directory.{n}
+/// If you don't specify --out-dir, gumwood will write to stdout.
 #[derive(Debug, StructOpt)]
 #[structopt(author)]
 pub struct Options {
@@ -42,14 +43,10 @@ pub struct Options {
     #[structopt(
         short,
         long,
-        help("Output directory"),
-        parse(from_os_str),
-        default_value = "."
+        help("Output directory for multiple files"),
+        parse(from_os_str)
     )]
-    out_dir: PathBuf,
-
-    #[structopt(short, long, help("Splits output into multiple files"))]
-    multiple: bool,
+    out_dir: Option<PathBuf>,
 
     #[structopt(long, help("Don't write any output"))]
     suppress_output: bool,
@@ -76,7 +73,7 @@ fn get_schema(args: &Options) -> Result<Schema, Box<dyn Error>> {
     Ok(schema)
 }
 
-fn write_multiple(
+fn write_to_files(
     contents: &HashMap<String, String>,
     out_dir: &PathBuf,
 ) -> Result<(), Box<dyn Error>> {
@@ -91,35 +88,28 @@ fn write_multiple(
     Ok(())
 }
 
-fn write_single(
-    contents: &HashMap<String, String>,
-    out_dir: &PathBuf,
-) -> Result<(), Box<dyn Error>> {
-    let mut file = File::create(out_dir.join("graphql.md"))?;
+fn write_to_stdout(contents: &HashMap<String, String>) {
     let mut keys: Vec<_> = contents.keys().collect();
     keys.sort();
 
     for key in keys.iter() {
         let markdown = contents.get(*key).unwrap();
         if !markdown.is_empty() {
-            file.write_all(markdown.as_bytes())?;
+            println!("{}", markdown);
         }
     }
-
-    Ok(())
 }
 
 /// Takes the arguments from the Options struct and generates
 /// markdown for the specified schema.
 pub fn run(args: Options) -> Result<(), Box<dyn Error>> {
     let schema = get_schema(&args)?;
-    let markdown = Markdown::with_front_matter(args.front_matter)?;
+    let markdown = Markdown::new(args.out_dir.is_some(), args.front_matter)?;
     let contents = markdown.generate_from_schema(&schema);
     if !args.suppress_output {
-        if args.multiple {
-            write_multiple(&contents, &args.out_dir)?;
-        } else {
-            write_single(&contents, &args.out_dir)?;
+        match args.out_dir {
+            Some(dir) => write_to_files(&contents, &dir)?,
+            None => write_to_stdout(&contents),
         }
     }
 
@@ -142,7 +132,6 @@ mod tests {
             "name2:value2",
             "--out-dir",
             "./out",
-            "--multiple",
             "--front-matter",
             "a:b;c:d",
         ];
@@ -151,9 +140,11 @@ mod tests {
         assert_eq!(args.header.len(), 2);
         assert_eq!(args.header[0], "name1:value1");
         assert_eq!(args.header[1], "name2:value2");
-        assert_eq!(args.out_dir.as_path().display().to_string(), "./out");
+        assert_eq!(
+            args.out_dir.unwrap().as_path().display().to_string(),
+            "./out"
+        );
         assert_eq!(args.front_matter.unwrap(), "a:b;c:d");
-        assert!(args.multiple);
         Ok(())
     }
 
@@ -169,7 +160,6 @@ mod tests {
             "name2:value2",
             "--out-dir",
             "./out",
-            "--multiple",
             "--front-matter",
             "a:b;c:d",
         ];
@@ -178,9 +168,11 @@ mod tests {
         assert_eq!(args.header.len(), 2);
         assert_eq!(args.header[0], "name1:value1");
         assert_eq!(args.header[1], "name2:value2");
-        assert_eq!(args.out_dir.as_path().display().to_string(), "./out");
+        assert_eq!(
+            args.out_dir.unwrap().as_path().display().to_string(),
+            "./out"
+        );
         assert_eq!(args.front_matter.unwrap(), "a:b;c:d");
-        assert!(args.multiple);
         Ok(())
     }
 
@@ -196,7 +188,6 @@ mod tests {
             "name2:value2",
             "--out-dir",
             "./out",
-            "--multiple",
             "--front-matter",
             "a:b;c:d",
         ];
@@ -205,23 +196,11 @@ mod tests {
         assert_eq!(args.header.len(), 2);
         assert_eq!(args.header[0], "name1:value1");
         assert_eq!(args.header[1], "name2:value2");
-        assert_eq!(args.out_dir.as_path().display().to_string(), "./out");
+        assert_eq!(
+            args.out_dir.unwrap().as_path().display().to_string(),
+            "./out"
+        );
         assert_eq!(args.front_matter.unwrap(), "a:b;c:d");
-        assert!(args.multiple);
-        Ok(())
-    }
-
-    #[test]
-    fn it_should_set_multiple_to_false_when_not_specified() -> Result<(), String> {
-        let vec = vec![
-            "gumwood",
-            "--url",
-            "https://example.com",
-            "--out-dir",
-            "./out",
-        ];
-        let args = Options::from_iter(vec.iter());
-        assert!(!args.multiple);
         Ok(())
     }
 
