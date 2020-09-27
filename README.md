@@ -30,16 +30,13 @@ Specify the source of the schema using --json, --url, or --schema.
  If you don't specify --out-dir, gumwood will write to stdout.
 
 USAGE:
-    gumwood [FLAGS] [OPTIONS]
+    gumwood [OPTIONS]
 
 FLAGS:
-    -h, --help               
+    -h, --help       
             Prints help information
 
-        --suppress-output    
-            Don't write any output
-
-    -V, --version            
+    -V, --version    
             Prints version information
 
 

@@ -48,9 +48,6 @@ pub struct Options {
     )]
     out_dir: Option<PathBuf>,
 
-    #[structopt(long, help("Don't write any output"))]
-    suppress_output: bool,
-
     #[structopt(short, long, help("Front matter for output files"))]
     front_matter: Option<String>,
 }
@@ -106,11 +103,9 @@ pub fn run(args: Options) -> Result<(), Box<dyn Error>> {
     let schema = get_schema(&args)?;
     let markdown = Markdown::new(args.out_dir.is_some(), args.front_matter)?;
     let contents = markdown.generate_from_schema(&schema);
-    if !args.suppress_output {
-        match args.out_dir {
-            Some(dir) => write_to_files(&contents, &dir)?,
-            None => write_to_stdout(&contents),
-        }
+    match args.out_dir {
+        Some(dir) => write_to_files(&contents, &dir)?,
+        None => write_to_stdout(&contents),
     }
 
     Ok(())
@@ -213,12 +208,7 @@ mod tests {
 
     #[test]
     fn it_should_process_testdata_response_without_error() {
-        let vec = vec![
-            "gumwood",
-            "--suppress-output",
-            "--json",
-            "testdata/response.json",
-        ];
+        let vec = vec!["gumwood", "--json", "testdata/response.json"];
         let args = Options::from_iter(vec.iter());
         assert!(run(args).is_ok());
     }
