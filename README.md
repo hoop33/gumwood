@@ -17,8 +17,7 @@ You specify a live GraphQL endpoint or the JSON result from a GraphQL introspect
 
 Get help:
 
-```
-$ gumwood --help
+```console
 gumwood 0.1.0
 Rob Warner <rwarner@grailbox.com>
 Convert a GraphQL schema to Markdown
@@ -30,13 +29,16 @@ Specify the source of the schema using --json, --url, or --schema.
  If you don't specify --out-dir, gumwood will write to stdout.
 
 USAGE:
-    gumwood [OPTIONS]
+    gumwood [FLAGS] [OPTIONS]
 
 FLAGS:
-    -h, --help       
+    -h, --help         
             Prints help information
 
-    -V, --version    
+    -n, --no-titles    
+            Don't add titles to each page
+
+    -V, --version      
             Prints version information
 
 
@@ -64,28 +66,63 @@ OPTIONS:
 
 Convert a GraphQL schema to a single stream written to `stdout`:
 
-```sh
+```console
 $ gumwood --url https://example.com/graphql
 ```
 
 Convert a GraphQL schema to multiple markdown files, divided by type:
 
-```sh
+```console
 $ gumwood --url https://example.com/graphql --out-dir /path/to/output
 ```
 
 Convert a GraphQL schema to multiple markdown files, divided by type, with front matter:
 
-```sh
+```console
 $ gumwood --url https://example.com/graphql --out-dir /path/to/output \
 --front-matter "key1:value1;key2:value2"
 ```
 
 Convert a GraphQL schema to multiple markdown files, divided by type, when the GraphQL endpoint requires authorization and a user agent:
 
-```sh
+```console
 $ gumwood --url https://example.com/graphql --out-dir /path/to/output \
 --header "Authorization: bearer myreallylongtoken" --header "User-Agent: gumwood"
+```
+
+## Front Matter
+
+The format for the front matter parameter is:
+
+```console
+--front-matter "key1:value1;key2:value2"
+```
+
+This produces front matter like this:
+
+```console
+---
+key1: value1
+key2: value2
+---
+```
+
+You can also do variable substitution by wrapping these variables in curly braces:
+
+| Variable | Description |
+| -------- | ----------- |
+| `type` | The GraphQL type |
+| `TYPE` | The GraphQL type in upper case |
+| `Type` | The GraphQL type in title case |
+
+Example:
+
+```console
+--front-matter "id:{type};title:{Type}"
+---
+id: enums
+title: Enums
+---
 ```
 
 ## Road Map
@@ -97,8 +134,9 @@ $ gumwood --url https://example.com/graphql --out-dir /path/to/output \
 - [x] Write to single or multiple files (-m flag)
 - [ ] Automatic versioning with semver
 - [ ] Automatic releases using GitHub Actions
-- [ ] Add front matter to generated file(s)
-- [ ] Allow variables in front matter
+- [x] Add front matter to generated file(s)
+- [x] Allow variables in front matter
+- [x] Allow more variables in front matter (formatted dates, ??)
 - [ ] Better error messaging &mdash; maybe a debug mode?
 - [x] Objects
 - [x] Inputs
@@ -120,7 +158,7 @@ Pull requests and constructive criticism welcome!
 
 ### Building
 
-```sh
+```console
 $ git clone https://github.com/hoop33/gumwood.git && cd gumwood
 $ cargo build
 ```
@@ -131,14 +169,14 @@ Gumwood uses [Tarpaulin](https://github.com/xd009642/tarpaulin) for test code co
 
 To use:
 
-```sh
+```console
 $ make deps # required once only
 $ make coverage
 ```
 
 To get an HTML report:
 
-```sh
+```console
 $ make html_coverage
 ```
 

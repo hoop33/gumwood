@@ -3,7 +3,7 @@ mod schema;
 mod schema_markdown;
 
 use schema::Schema;
-use schema_markdown::Markdown;
+use schema_markdown::generate_from_schema;
 use std::{
     collections::HashMap,
     error::Error,
@@ -12,6 +12,7 @@ use std::{
     path::PathBuf,
 };
 use structopt::StructOpt;
+use titlecase::titlecase;
 
 /// Convert a GraphQL schema to Markdown
 ///
@@ -50,6 +51,9 @@ pub struct Options {
 
     #[structopt(short, long, help("Front matter for output files"))]
     front_matter: Option<String>,
+
+    #[structopt(short, long, help("Don't add titles to each page"))]
+    no_titles: bool,
 }
 
 fn get_schema(args: &Options) -> Result<Schema, Box<dyn Error>> {
@@ -72,28 +76,46 @@ fn get_schema(args: &Options) -> Result<Schema, Box<dyn Error>> {
 
 fn write_to_files(
     contents: &HashMap<String, String>,
+    front_matter: Option<String>,
     out_dir: &PathBuf,
 ) -> Result<(), Box<dyn Error>> {
     for (name, markdown) in contents {
         if !markdown.is_empty() {
             let out_file = format!("{}.md", name);
             let mut file = File::create(out_dir.join(out_file))?;
-            file.write_all(markdown.as_bytes())?;
+            let fm = create_front_matter(&front_matter, name);
+            let contents = format!("{}{}", fm, markdown);
+            file.write_all(contents.as_bytes())?;
         }
     }
 
     Ok(())
 }
 
-fn write_to_stdout(contents: &HashMap<String, String>) {
+fn write_to_stdout(contents: &HashMap<String, String>, front_matter: Option<String>) {
     let mut keys: Vec<_> = contents.keys().collect();
     keys.sort();
 
     for key in keys.iter() {
         let markdown = contents.get(*key).unwrap();
         if !markdown.is_empty() {
-            println!("{}", markdown);
+            let fm = create_front_matter(&front_matter, key);
+            println!("{}{}", fm, markdown);
         }
+    }
+}
+
+fn create_front_matter(front_matter: &Option<String>, typ: &str) -> String {
+    match front_matter {
+        Some(fm) => format!(
+            "---\n{}\n---\n",
+            fm.replace("{type}", typ)
+                .replace("{TYPE}", &typ.to_uppercase())
+                .replace("{Type}", &titlecase(typ))
+                .replace(":", ": ")
+                .replace(";", "\n")
+        ),
+        None => "".to_string(),
     }
 }
 
@@ -101,11 +123,10 @@ fn write_to_stdout(contents: &HashMap<String, String>) {
 /// markdown for the specified schema.
 pub fn run(args: Options) -> Result<(), Box<dyn Error>> {
     let schema = get_schema(&args)?;
-    let markdown = Markdown::new(args.out_dir.is_some())?;
-    let contents = markdown.generate_from_schema(&schema);
+    let contents = generate_from_schema(&schema, !args.no_titles);
     match args.out_dir {
-        Some(dir) => write_to_files(&contents, &dir)?,
-        None => write_to_stdout(&contents),
+        Some(dir) => write_to_files(&contents, args.front_matter, &dir)?,
+        None => write_to_stdout(&contents, args.front_matter),
     }
 
     Ok(())
@@ -211,5 +232,45 @@ mod tests {
         let vec = vec!["gumwood", "--json", "testdata/response.json"];
         let args = Options::from_iter(vec.iter());
         assert!(run(args).is_ok());
+    }
+
+    #[test]
+    fn create_front_matter_should_return_empty_when_none() {
+        assert_eq!(create_front_matter(&None, ""), "");
+    }
+
+    #[test]
+    fn create_front_matter_should_return_front_matter_when_some() {
+        assert_eq!(
+            create_front_matter(&Some("hello".to_string()), ""),
+            "---\nhello\n---\n"
+        );
+    }
+
+    #[test]
+    fn create_front_matter_should_split_lines_on_semicolons() {
+        assert_eq!(
+            create_front_matter(&Some("hello;hola;bonjour".to_string()), ""),
+            "---\nhello\nhola\nbonjour\n---\n"
+        );
+    }
+
+    #[test]
+    fn create_front_matter_should_add_space_after_colons() {
+        assert_eq!(
+            create_front_matter(&Some("en:hello;es:hola;fr:bonjour".to_string()), ""),
+            "---\nen: hello\nes: hola\nfr: bonjour\n---\n"
+        );
+    }
+
+    #[test]
+    fn create_front_matter_should_subsitute_types() {
+        assert_eq!(
+            create_front_matter(
+                &Some("same:{type};title:{Type};upper:{TYPE}".to_string()),
+                "greeting"
+            ),
+            "---\nsame: greeting\ntitle: Greeting\nupper: GREETING\n---\n"
+        );
     }
 }

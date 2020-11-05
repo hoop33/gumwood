@@ -2,7 +2,6 @@ use super::markdown::*;
 use super::schema::{Enum, Field, Input, Schema, Type, TypeRef};
 use lazy_static::lazy_static;
 use std::collections::HashMap;
-use std::error::Error;
 use titlecase::titlecase;
 
 lazy_static! {
@@ -18,50 +17,41 @@ lazy_static! {
     };
 }
 
-#[derive(Debug)]
-pub struct Markdown {
-    multiple: bool,
-}
+pub fn generate_from_schema(schema: &Schema, add_titles: bool) -> HashMap<String, String> {
+    let mut contents: HashMap<String, String> = HashMap::new();
 
-impl Markdown {
-    pub fn new(multiple: bool) -> Result<Markdown, Box<dyn Error>> {
-        Ok(Markdown { multiple })
+    contents.insert(
+        "queries".to_string(),
+        schema_type_to_markdown(schema, schema.get_query_name(), add_titles),
+    );
+    contents.insert(
+        "mutations".to_string(),
+        schema_type_to_markdown(schema, schema.get_mutation_name(), add_titles),
+    );
+    contents.insert(
+        "subscriptions".to_string(),
+        schema_type_to_markdown(schema, schema.get_subscription_name(), add_titles),
+    );
+
+    for (graphql, friendly) in GRAPHQL_TYPES.iter() {
+        contents.insert(
+            friendly.to_string(),
+            types_to_markdown(schema, &titlecase(friendly), graphql, add_titles),
+        );
     }
 
-    pub fn generate_from_schema(&self, schema: &Schema) -> HashMap<String, String> {
-        let mut contents: HashMap<String, String> = HashMap::new();
-
-        contents.insert(
-            "queries".to_string(),
-            schema_type_to_markdown(schema, schema.get_query_name()),
-        );
-        contents.insert(
-            "mutations".to_string(),
-            schema_type_to_markdown(schema, schema.get_mutation_name()),
-        );
-        contents.insert(
-            "subscriptions".to_string(),
-            schema_type_to_markdown(schema, schema.get_subscription_name()),
-        );
-
-        for (graphql, friendly) in GRAPHQL_TYPES.iter() {
-            contents.insert(
-                friendly.to_string(),
-                types_to_markdown(schema, &titlecase(friendly), graphql),
-            );
-        }
-
-        contents
-    }
+    contents
 }
 
-fn schema_type_to_markdown(schema: &Schema, type_name: Option<String>) -> String {
+fn schema_type_to_markdown(schema: &Schema, type_name: Option<String>, add_titles: bool) -> String {
     let mut s = String::new();
 
     if let Some(typ) = type_name.and_then(|name| schema.get_type(&name)) {
-        match &typ.name {
-            Some(name) => s.push_str(&to_header(1, &name)),
-            None => {}
+        if add_titles {
+            match &typ.name {
+                Some(name) => s.push_str(&to_header(1, &name)),
+                None => {}
+            }
         }
 
         match &typ.description {
@@ -82,13 +72,15 @@ fn schema_type_to_markdown(schema: &Schema, type_name: Option<String>) -> String
     s
 }
 
-fn types_to_markdown(schema: &Schema, title: &str, kind: &str) -> String {
+fn types_to_markdown(schema: &Schema, title: &str, kind: &str, add_title: bool) -> String {
     let mut s = String::new();
 
     let mut types = schema.get_types_of_kind(kind);
 
     if !types.is_empty() {
-        s.push_str(&to_header(1, title));
+        if add_title {
+            s.push_str(&to_header(1, title));
+        }
 
         types.sort_by(|a, b| a.name.cmp(&b.name));
 
@@ -99,7 +91,6 @@ fn types_to_markdown(schema: &Schema, title: &str, kind: &str) -> String {
 
     s
 }
-
 fn type_to_markdown(typ: &Type) -> String {
     let mut s = String::new();
 
@@ -339,13 +330,7 @@ mod tests {
     use crate::schema::TypeRef;
 
     #[test]
-    fn markdown_new_should_return_ok() {
-        assert!(Markdown::new(false).is_ok());
-    }
-
-    #[test]
     fn generate_from_schema_should_return_empty_when_empty_schema() {
-        let markdown = Markdown::new(false).unwrap();
         let schema = &Schema {
             query_type: None,
             mutation_type: None,
@@ -353,7 +338,7 @@ mod tests {
             types: None,
             directives: None,
         };
-        let map = markdown.generate_from_schema(schema);
+        let map = generate_from_schema(schema, true);
         assert_eq!(9, map.len());
         assert_eq!("".to_string(), map["queries"]);
         assert_eq!("".to_string(), map["mutations"]);
@@ -377,7 +362,7 @@ mod tests {
         };
         assert_eq!(
             "".to_string(),
-            schema_type_to_markdown(schema, schema.get_query_name())
+            schema_type_to_markdown(schema, schema.get_query_name(), true)
         );
     }
 
@@ -401,7 +386,7 @@ mod tests {
         };
         assert_eq!(
             "".to_string(),
-            schema_type_to_markdown(schema, schema.get_query_name())
+            schema_type_to_markdown(schema, schema.get_query_name(), true)
         );
     }
 
@@ -450,7 +435,7 @@ mod tests {
 
 "#
             .to_string(),
-            schema_type_to_markdown(schema, schema.get_query_name())
+            schema_type_to_markdown(schema, schema.get_query_name(), true)
         );
     }
 
@@ -465,7 +450,7 @@ mod tests {
         };
         assert_eq!(
             "".to_string(),
-            schema_type_to_markdown(schema, schema.get_mutation_name())
+            schema_type_to_markdown(schema, schema.get_mutation_name(), true)
         );
     }
 
@@ -489,7 +474,7 @@ mod tests {
         };
         assert_eq!(
             "".to_string(),
-            schema_type_to_markdown(schema, schema.get_mutation_name())
+            schema_type_to_markdown(schema, schema.get_mutation_name(), true)
         );
     }
 
@@ -538,7 +523,7 @@ mod tests {
 
 "#
             .to_string(),
-            schema_type_to_markdown(schema, schema.get_mutation_name())
+            schema_type_to_markdown(schema, schema.get_mutation_name(), true)
         );
     }
 
@@ -553,7 +538,7 @@ mod tests {
         };
         assert_eq!(
             "".to_string(),
-            schema_type_to_markdown(schema, schema.get_subscription_name())
+            schema_type_to_markdown(schema, schema.get_subscription_name(), true)
         );
     }
 
@@ -577,7 +562,7 @@ mod tests {
         };
         assert_eq!(
             "".to_string(),
-            schema_type_to_markdown(schema, schema.get_subscription_name())
+            schema_type_to_markdown(schema, schema.get_subscription_name(), true)
         );
     }
 
@@ -626,7 +611,7 @@ mod tests {
 
 "#
             .to_string(),
-            schema_type_to_markdown(schema, schema.get_subscription_name())
+            schema_type_to_markdown(schema, schema.get_subscription_name(), true)
         );
     }
 
@@ -681,7 +666,60 @@ mod tests {
 
 "#
             .to_string(),
-            types_to_markdown(schema, "Objects", "OBJECT")
+            types_to_markdown(schema, "Objects", "OBJECT", true)
+        );
+    }
+
+    #[test]
+    fn types_to_markdown_should_return_markdown_with_no_h1_when_add_titles_is_false() {
+        let schema = &Schema {
+            query_type: None,
+            mutation_type: None,
+            subscription_type: None,
+            types: Some(vec![Type {
+                name: Some("Player".to_string()),
+                kind: Some("OBJECT".to_string()),
+                description: Some("A player".to_string()),
+                fields: Some(vec![
+                    Field {
+                        name: Some("firstName".to_string()),
+                        description: Some("The player's first name".to_string()),
+                        args: None,
+                        field_type: None,
+                        is_deprecated: None,
+                        deprecation_reason: None,
+                    },
+                    Field {
+                        name: Some("lastName".to_string()),
+                        description: Some("The player's last name".to_string()),
+                        args: None,
+                        field_type: None,
+                        is_deprecated: None,
+                        deprecation_reason: None,
+                    },
+                ]),
+                inputs: None,
+                interfaces: None,
+                enums: None,
+                possible_types: None,
+            }]),
+            directives: None,
+        };
+        assert_eq!(
+            r#"## <a name="player"></a>Player
+
+> A player
+
+### Fields
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `firstName` |  | The player's first name |
+| `lastName` |  | The player's last name |
+
+"#
+            .to_string(),
+            types_to_markdown(schema, "Objects", "OBJECT", false)
         );
     }
 
