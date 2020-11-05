@@ -101,7 +101,7 @@ fn write_to_stdout(contents: &HashMap<String, String>) {
 /// markdown for the specified schema.
 pub fn run(args: Options) -> Result<(), Box<dyn Error>> {
     let schema = get_schema(&args)?;
-    let markdown = Markdown::new(args.out_dir.is_some(), args.front_matter)?;
+    let markdown = Markdown::new(args.out_dir.is_some())?;
     let contents = markdown.generate_from_schema(&schema);
     match args.out_dir {
         Some(dir) => write_to_files(&contents, &dir)?,
